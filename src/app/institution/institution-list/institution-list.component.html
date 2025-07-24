@@ -30,7 +30,7 @@
                     <tr>
                         <th>
                             <div class="col-sm-2" style="width: 70.666667%">
-                                <button pRipple class="fas fa-plus" pButton type="button"
+                                <button *ngIf="canManageInstitutions" pRipple class="fas fa-plus" pButton type="button"
                                     style="background-color: #c6cfd7; border-color: transparent"
                                     (click)="addInstitution()">
                                     <i class="pi pi-plus" style="font-size: 1rem; color: #000"></i>
