@@ -4,6 +4,7 @@ import { GuidanceVideoComponent } from 'app/guidance-video/guidance-video.compon
 import { LazyLoadEvent } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 import { Institution, InstitutionControllerServiceProxy, ServiceProxy } from 'shared/service-proxies/service-proxies';
+import { RoleGuardService } from 'app/auth/role-guard.service';
 
 @Component({
   selector: 'app-institution-list',
@@ -21,6 +22,7 @@ export class InstitutionListComponent implements OnInit {
   status: number[] = [0,-10];
 
   userId: number = 1;
+  canManageInstitutions: boolean = false;
 
   searchBy: any = {
     text: null,
@@ -40,6 +42,7 @@ export class InstitutionListComponent implements OnInit {
     private institutionProxy: InstitutionControllerServiceProxy,
     private cdr: ChangeDetectorRef,
     protected dialogService: DialogService,
+    private roleGuardService: RoleGuardService,
   ) { }
 
   ngAfterViewInit(): void {
@@ -50,6 +53,15 @@ export class InstitutionListComponent implements OnInit {
 
     let event: any = {};
    this.loadgridData(event)
+
+   this.canManageInstitutions = this.roleGuardService.checkRoles([
+     'Master_Admin',
+     'Country Admin', 
+     'Sector Admin',
+     'Data Collection Team',
+     'MRV Admin',
+     'Technical Team'
+   ]);
 
   }
 
@@ -112,7 +124,11 @@ setTimeout(() => {
 
   
   addInstitution() {
-    this.router.navigate(['/app/add-institution']);
+    if (this.canManageInstitutions) {
+      this.router.navigate(['/app/add-institution']);
+    } else {
+      console.warn('User does not have permission to add institution.');
+    }
   }
 
   viewInstitution(institutions: Institution){
