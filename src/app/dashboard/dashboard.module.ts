@@ -68,6 +68,8 @@ import { PortfolioComparisonComponent } from 'app/portfolios/portfolio-compariso
 import { SdgPriorityComponent } from 'app/sdg-priority/sdg-priority.component';
 import { AssessmentInprogressComponent } from 'app/assessment-inprogress/assessment-inprogress.component';
 import { AssessmentFlowComponent } from 'app/Tool/assessment-flow/assessment-flow.component';
+import { RoleGuardService } from 'app/auth/role-guard.service';
+import { UserRoles } from '../app-routing.module';
 
 
 const routes: Routes = [
@@ -88,31 +90,59 @@ const routes: Routes = [
   {
     path: 'institutionlist',
     component: InstitutionListComponent,
-    loadChildren: () => import('../dashboard/dashboard.module').then((m) => m.DashboardModule),
-    canActivate: [],
-    data: {}
+    canActivate: [RoleGuardService],
+    data: {
+      expectedRoles: [
+        UserRoles.COUNTRY_ADMIN,
+        UserRoles.SECTOR_ADMIN,
+        UserRoles.MRV_ADMIN,
+        UserRoles.DCT,
+        UserRoles.TT
+      ]
+    }
   },
   {
     path: 'add-institution',
     component: InstitutionComponent,
-    loadChildren: () => import('../dashboard/dashboard.module').then((m) => m.DashboardModule),
-    canActivate: [],
-    data: {}
+    canActivate: [RoleGuardService],
+    data: {
+      expectedRoles: [
+        UserRoles.COUNTRY_ADMIN,
+        UserRoles.SECTOR_ADMIN,
+        UserRoles.MRV_ADMIN,
+        UserRoles.DCT,
+        UserRoles.TT
+      ]
+    }
   },
   {
     path: 'view-institution',
     component: ViewInstitutionComponent,
-    loadChildren: () => import('../dashboard/dashboard.module').then((m) => m.DashboardModule),
-    canActivate: [],
-    data: {}
+    canActivate: [RoleGuardService],
+    data: {
+      expectedRoles: [
+        UserRoles.COUNTRY_ADMIN,
+        UserRoles.SECTOR_ADMIN,
+        UserRoles.MRV_ADMIN,
+        UserRoles.DCT,
+        UserRoles.TT
+      ]
+    }
   },
 
   {
     path: 'edit-institution',
     component: EditInstitutionComponent,
-    loadChildren: () => import('../dashboard/dashboard.module').then((m) => m.DashboardModule),
-    canActivate: [],
-    data: {}
+    canActivate: [RoleGuardService],
+    data: {
+      expectedRoles: [
+        UserRoles.COUNTRY_ADMIN,
+        UserRoles.SECTOR_ADMIN,
+        UserRoles.MRV_ADMIN,
+        UserRoles.DCT,
+        UserRoles.TT
+      ]
+    }
   },
   {
     path: 'add-interventions',

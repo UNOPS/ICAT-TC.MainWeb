@@ -58,7 +58,7 @@ selectedIndicator: string;
     private climateAction : ProjectControllerServiceProxy,
     private router: Router,
     private serviceProxy: ServiceProxy,
-    private instituionProxy: InstitutionControllerServiceProxy,
+    private institutionProxy: InstitutionControllerServiceProxy,
     private route: ActivatedRoute,
     private httpClient: HttpClient, private messageService: MessageService
   ) {
@@ -241,7 +241,7 @@ trigger : boolean = false;
 
     intTypeFilter.push('type.id||$eq||' + 3);
 
-    this.instituionProxy.getInstituion(3,this.userCountryId,1000,0).subscribe((res: any) => {
+    this.institutionProxy.getInstitution(3,this.userCountryId,1000,0).subscribe((res: any) => {
       this.instiTutionList = res;
     });
 

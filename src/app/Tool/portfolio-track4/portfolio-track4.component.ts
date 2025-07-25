@@ -181,7 +181,7 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     private sectorProxy: SectorControllerServiceProxy,
     private investorToolControllerproxy: InvestorToolControllerServiceProxy,
     private router: Router,
-    private instituionProxy: InstitutionControllerServiceProxy,
+    private institutionProxy: InstitutionControllerServiceProxy,
     private activatedRoute: ActivatedRoute,
     public sanitizer: DomSanitizer,
     private assessmentControllerServiceProxy: AssessmentControllerServiceProxy,
@@ -286,7 +286,7 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
 
     intTypeFilter.push('type.id||$eq||' + 3);
 
-    this.instituionProxy.getInstituion(3, this.userCountryId, 1000, 0).subscribe((res: any) => {
+    this.institutionProxy.getInstitution(3, this.userCountryId, 1000, 0).subscribe((res: any) => {
       this.instiTutionList = res;
     });
 
