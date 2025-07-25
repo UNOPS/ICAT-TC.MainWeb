@@ -23002,12 +23002,12 @@ export class InstitutionControllerServiceProxy {
         return _observableOf(null as any);
     }
 
-    deactivateInstitution(instiId: number): Observable<any> {
-        let url_ = this.baseUrl + "/institution/deactivateInstituion?";
-        if (instiId === undefined || instiId === null)
-            throw new Error("The parameter 'instiId' must be defined and cannot be null.");
+    deactivateInstitution(institutionId: number): Observable<any> {
+        let url_ = this.baseUrl + "/institution/deactivateInstitution?";
+        if (institutionId === undefined || institutionId === null)
+            throw new Error("The parameter 'institutionId' must be defined and cannot be null.");
         else
-            url_ += "instiId=" + encodeURIComponent("" + instiId) + "&";
+            url_ += "institutionId=" + encodeURIComponent("" + institutionId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_ : any = {
@@ -23390,8 +23390,8 @@ export class InstitutionControllerServiceProxy {
         return _observableOf(null as any);
     }
 
-    getInstituion(filterText: number, countryId: number, limit: number, page: number): Observable<any> {
-        let url_ = this.baseUrl + "/institution/getInstituion?";
+    getInstitution(filterText: number, countryId: number, limit: number, page: number): Observable<any> {
+        let url_ = this.baseUrl + "/institution/getInstitution?";
         if (filterText === undefined || filterText === null)
             throw new Error("The parameter 'filterText' must be defined and cannot be null.");
         else
@@ -23419,11 +23419,11 @@ export class InstitutionControllerServiceProxy {
         };
 
         return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processGetInstituion(response_);
+            return this.processGetInstitution(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
                 try {
-                    return this.processGetInstituion(response_ as any);
+                    return this.processGetInstitution(response_ as any);
                 } catch (e) {
                     return _observableThrow(e) as any as Observable<any>;
                 }
@@ -23432,7 +23432,7 @@ export class InstitutionControllerServiceProxy {
         }));
     }
 
-    protected processGetInstituion(response: HttpResponseBase): Observable<any> {
+    protected processGetInstitution(response: HttpResponseBase): Observable<any> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -23455,8 +23455,8 @@ export class InstitutionControllerServiceProxy {
         return _observableOf(null as any);
     }
 
-    getInstituionById(id: number): Observable<any> {
-        let url_ = this.baseUrl + "/institution/getInstituionById?";
+    getInstitutionById(id: number): Observable<any> {
+        let url_ = this.baseUrl + "/institution/getInstitutionById?";
         if (id === undefined || id === null)
             throw new Error("The parameter 'id' must be defined and cannot be null.");
         else
@@ -23472,11 +23472,11 @@ export class InstitutionControllerServiceProxy {
         };
 
         return this.http.request("get", url_, options_).pipe(_observableMergeMap((response_ : any) => {
-            return this.processGetInstituionById(response_);
+            return this.processGetInstitutionById(response_);
         })).pipe(_observableCatch((response_: any) => {
             if (response_ instanceof HttpResponseBase) {
                 try {
-                    return this.processGetInstituionById(response_ as any);
+                    return this.processGetInstitutionById(response_ as any);
                 } catch (e) {
                     return _observableThrow(e) as any as Observable<any>;
                 }
@@ -23485,7 +23485,7 @@ export class InstitutionControllerServiceProxy {
         }));
     }
 
-    protected processGetInstituionById(response: HttpResponseBase): Observable<any> {
+    protected processGetInstitutionById(response: HttpResponseBase): Observable<any> {
         const status = response.status;
         const responseBlob =
             response instanceof HttpResponse ? response.body :
@@ -23509,7 +23509,7 @@ export class InstitutionControllerServiceProxy {
     }
 
     update(body: Institution): Observable<Institution> {
-        let url_ = this.baseUrl + "/institution/updateInstituion";
+        let url_ = this.baseUrl + "/institution/updateInstitution";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body);
@@ -23561,7 +23561,7 @@ export class InstitutionControllerServiceProxy {
     }
 
     create(body: Institution): Observable<Institution> {
-        let url_ = this.baseUrl + "/institution/createInstituion";
+        let url_ = this.baseUrl + "/institution/createInstitution";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body);

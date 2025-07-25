@@ -76,7 +76,7 @@ export class ViewInstitutionComponent implements OnInit {
 
     this.route.queryParams.subscribe((params) => {
       this.institutionId = params['id'];
-      this.institutionProxy.getInstituionById(
+      this.institutionProxy.getInstitutionById(
         this.institutionId,
       ).subscribe((res) => {
         this.institution = res;

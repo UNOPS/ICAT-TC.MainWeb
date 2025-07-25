@@ -101,7 +101,7 @@ export class InstitutionComponent implements OnInit {
 
       if (this.institutionId && this.institutionId > 0) {
         this.isNew = false;
-        this.institutionProxy.getInstituionById(
+        this.institutionProxy.getInstitutionById(
             this.institutionId
           ).subscribe((res) => {
             this.institution = res;
