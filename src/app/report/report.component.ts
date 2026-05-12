@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { GuidanceVideoComponent } from 'app/guidance-video/guidance-video.component';
 import { MasterDataService } from 'app/shared/master-data.service';
 import { environment } from 'environments/environment';
-import { MessageService } from 'primeng/api';
+import { ConfirmationService, MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 import { Assessment, ClimateAction, CreateReportDto, MethodologyAssessmentControllerServiceProxy, ProjectControllerServiceProxy, ReportControllerServiceProxy } from 'shared/service-proxies/service-proxies';
 
@@ -42,6 +42,7 @@ export class ReportComponent implements OnInit {
     private masterDataService: MasterDataService,
     private messageService: MessageService,
     protected dialogService: DialogService,
+    private confirmationService: ConfirmationService,
   ) { }
 
   async ngOnInit(): Promise<void> {
@@ -172,5 +173,34 @@ export class ReportComponent implements OnInit {
     return returnType
   }
 
+  deleteReport(report: any) {
+    this.confirmationService.confirm({
+      message: `Are you sure you want to delete "${report.reportName}"?`,
+      header: 'Delete Confirmation',
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      accept: () => {
+        this.reportControllerServiceProxy.remove(report.id.toString()).subscribe(
+          () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: 'Report deleted successfully',
+              closable: true,
+            });
+            this.filterReportData();
+          },
+          (err) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Failed to delete report',
+              closable: true,
+            });
+          }
+        );
+      }
+    });
+  }
 
 }

@@ -870,6 +870,12 @@ export class InvestorToolComponent implements OnInit, AfterContentChecked, OnDes
 
   onSelectIntervention(event: any) {
     this.minDate = new Date(event.value.dateOfImplementation)
+
+    if (!this.isEditMode) {
+      this.from_date = new Date(event.value.dateOfImplementation);
+      this.onSelectFromDate(this.from_date);
+    }
+
     this.geographicalArea = this.geographicalAreasCovered.find(item=>{
       if (item.name==this.assessment.climateAction.geographicalAreaCovered){
         return item

@@ -306,13 +306,13 @@ logOutSubs: Subscription;
               req.boundraries = this.cm_detail.boundraries;
               req.intCMApproach = this.cm_detail.intCMApproach;
               req.appliedMethodology = this.cm_detail.appliedMethodology;
-              //@ts-ignore
-              req.sectorsCovered = undefined
-              //@ts-ignore
-              req.geographicalAreasCovered = undefined
+              delete (req as any).sectorsCovered;
+              delete (req as any).geographicalAreasCovered;
 
             } else {
               req = this.cm_detail;
+              delete (req as any).sectorsCovered;
+              delete (req as any).geographicalAreasCovered;
             }
 
             this.serviceProxy.createOneBaseAssessmentCMDetailControllerAssessmentCMDetail(req)
@@ -397,9 +397,46 @@ logOutSubs: Subscription;
     }
   }
 
+  saveDraft() {
+    this.assessment.tool = 'CARBON_MARKET'
+    this.assessment.assessment_approach = 'DIRECT'
+    this.assessment.isDraft = true
+    this.assessment.lastDraftLocation = 'initial'
+    if (!this.assessment.id) this.assessment.createdOn = moment(new Date())
+    this.assessment.editedOn = moment(new Date())
+    if (this.from_date) this.assessment.from = moment(this.from_date)
+    if (this.to_date) this.assessment.to = moment(this.to_date)
+
+    this.methodologyAssessmentControllerServiceProxy.saveAssessment(this.assessment)
+      .subscribe(res => {
+        if (res) {
+          this.assessment = res
+          this.assessmentres = res
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Assessment saved as draft',
+            closable: true,
+          })
+        }
+      }, error => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Draft save failed',
+          closable: true,
+        })
+      })
+  }
+
   onSelectIntervention(event: any) {
     this.minDate = new Date(event.value.dateOfImplementation)
     
+    if (!this.isEditMode) {
+      this.from_date = new Date(event.value.dateOfImplementation);
+      this.onSelectFromDate(this.from_date);
+    }
+
     this.geographicalArea = this.geographicalAreasCovered.find(item=>{
       if (item.name==this.assessment.climateAction.geographicalAreaCovered){
         return item

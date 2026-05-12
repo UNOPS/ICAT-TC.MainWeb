@@ -104,7 +104,7 @@ export class DashboardComponent implements OnInit {
          } else if (this.isPortfolioTool){
            this.goToPortfolio();
          } else if(this.isAllTool){
-          this.goToAllTool;
+          this.goToAllTool();
          }
       }else{
         this.clickcarbon = true;
