@@ -45,7 +45,7 @@
     </div>
     <div class="col-2">
         <p-fileUpload [disabled]="!selectedAnswer" mode="basic" chooseIcon="pi pi-upload" chooseLabel="Upload" name="files" [url]="uploadUrl" 
-        (onUpload)="onUpload($event,'FILE')" [multiple]="true" accept="{{acceptedFiles}}" [maxFileSize]="5000000" 
+        (onUpload)="onUpload($event,'FILE')" [multiple]="true" accept="{{acceptedFiles}}" [maxFileSize]="25000000" 
         [auto]="true">
         </p-fileUpload>
     </div>

@@ -863,11 +863,9 @@ export class ClimateActionComponent implements OnInit  {
       let obj = new AddPolicySector
       obj.id =this.project.id;
       obj.sector=this.finalSectors;
-     await  this.projectProxy.deletePolicySector(this.project.id).subscribe(async (res)=>{
-      await this.projectProxy.addPolicySector(obj).subscribe((res)=>{});
-     });
-      
-     setTimeout(() => {
+      await this.projectProxy.deletePolicySector(this.project.id).toPromise();
+      await this.projectProxy.addPolicySector(obj).toPromise();
+
       this.sectornames=[]
       for(let x of this.finalSectors){
         this.sectornames.push(x.name)
@@ -893,8 +891,7 @@ export class ClimateActionComponent implements OnInit  {
             sticky: true,
           });
         }
-      )
-    }, 2000);
+      );
 
       
 
