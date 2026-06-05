@@ -1,409 +1,860 @@
 <div class="container pl-20 pr-20" id="content">
-    <div class="mb-12">
-        <h4 class="mt-4"> Result - {{intervention? intervention.policyName : ''}}</h4>
+  <div class="mb-12">
+    <h4 class="mt-4">
+      Result - {{ intervention ? intervention.policyName : '' }}
+    </h4>
+  </div>
+  <div class="card" style="min-height: 600px" id="cmtool">
+    <div class="p-grid p-fluid col-md-12 col-sm-12 text-title">
+      <div class="row p-2" *ngFor="let item of card">
+        <div class="col-3">{{ item.title }} :</div>
+        <div class="col-9">{{ item.data }}</div>
+      </div>
     </div>
-    <div class="card" style="min-height: 600px;" id="cmtool">
-        <div class="p-grid p-fluid col-md-12 col-sm-12 text-title">
-            <div class="row p-2" *ngFor="let item of card">
-                <div class="col-3">{{item.title}} :</div>
-                <div class="col-9">{{item.data}}</div>
-            </div>
-        </div>
-        <hr>
-        <div class="table-data">
-            <div class="p-grid p-fluid col-md-12 col-sm-12" *ngFor="let section of sections ">
-                <br>
-                <table>
-                    <tr class="table-header-left">
-                        <p class="category-topic"><u><b>{{section}}</b> </u></p>
-                    </tr>
-                </table>
-                <br>
-                <table>
-                    <tr></tr>
-                </table>
-                <div class="row p-2">
-                    <p-table [value]="results[section]" sortField="question" sortMode="single" dataKey="criteria" rowGroupMode="subheader" groupRowsBy="criteria" [tableStyle]="{'min-width': '70rem'}" [expandedRowKeys]="expandedRows">
-                        <ng-template pTemplate="header">
-                            <tr>
-                                <th>Criterion</th>
-                                <th>Criterion met?</th>
-                                <th>Evidence provided?</th>
-                            </tr>
-                        </ng-template>
-                        <ng-template pTemplate="groupheader" let-criteria let-rowIndex="rowIndex" let-expanded="expanded">
-                            <tr>
-                                <td colspan="5">
-                                    <button type="button" pButton pRipple [pRowToggler]="criteria" class="p-button-text p-button-rounded p-button-plain mr-2" [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"></button>
-                                    <span class="font-bold ml-2">{{criteria.criteria}}
-                                        <span *ngIf="!criteria.satisfied"> ❌</span>
-                                        <span *ngIf="criteria.satisfied"> ✅</span>
-                                    </span>
-                                </td>
-                            </tr>
-                        </ng-template>
-                        <ng-template pTemplate="rowexpansion" let-criteria>
-                            <tr>
-                                <td>{{criteria.short_label}}</td>
-                                <td>{{criteria.isPassing ? 'Yes' : 'No'}}</td>
-                                <td *ngIf="criteria.hasEvidence === 'Yes'"><a href="#" (click)="$event.preventDefault();downloadFiles(criteria.document)">{{criteria.hasEvidence}}</a></td>
-                                <td *ngIf="criteria.hasEvidence === 'No'">{{criteria.hasEvidence}}</td>
-                            </tr>
-                        </ng-template>
-                    </p-table>
-                </div>
-            </div>
-            <table>
-                <tr></tr>
-            </table>
-            <div class="p-grid p-fluid col-12">
-                <br>
-                <table>
-                    <tr class="table-header-left">
-                        <p class="category-topic"><u><b>Transformational change criteria</b> </u> </p>
-                    </tr>
-                </table>
-                <br>
-                <table>
-                    <tr></tr>
-                </table>
-                <table *ngIf="processData?.data?.length > 0">
-                    <tr class="table-header-left">
-                        <p style="font-size: large;">Process of change</p>
-                    </tr>
-                </table>
-                <br>
-                <p-table *ngIf="processData?.data?.length > 0" [value]="[{}]" styleClass="p-datatable-gridlines" [scrollable]="true" scrollHeight="400px" id="process-table">
-                    <ng-template pTemplate="header">
-                        <tr>
-                            <th></th>
-                            <ng-container *ngFor="let data of processData.data">
-                                <th [attr.colspan]="data.characteristic.length*3">{{data.name}}</th>
-                            </ng-container>
-                        </tr>
-                    </ng-template>
-                    <ng-template pTemplate="body" let-rowData>
-                        <tr>
-                            <ng-container *ngFor="let cat of processData.data; let i = index">
-                                <ng-container *ngFor="let data of cat.characteristic; let idx = index">
-                                    <td *ngIf="(i === 0 && idx === 0)" rowspan="2">Relevance</td>
-                                    <td colspan="3">{{data.name}}</td>
-                                </ng-container>
-                            </ng-container>
-                        </tr>
-                        <tr>
-                            <ng-container *ngFor="let cat of processData.data">
-                                <ng-container *ngFor="let data of cat.characteristic">
-                                    <td colspan="3">{{getRelevance(data.relevance)}}</td>
-                                </ng-container>
-                            </ng-container>
-                        </tr>
-                        <tr>
-                            <td [attr.rowspan]="processData.guidingQuestions?.length + 2">Score</td>
-                            <ng-container *ngFor="let cat of processData.data">
-                                <ng-container *ngFor="let data of cat.characteristic">
-                                    <td>Guiding question</td>
-                                    <td>Weight</td>
-                                    <td>Score</td>
-                                </ng-container>
-                            </ng-container>
-                        </tr>
-                        <ng-container *ngFor="let question of processData.guidingQuestions">
-                            <tr>
-                                <ng-container *ngFor="let cat of processData.data">
-                                    <ng-container *ngFor="let data of cat.characteristic">
-                                        <td>{{question[data.name + 'question']}}</td>
-                                        <td>{{question[data.name + 'weight']}}%</td>
-                                        <td>{{question[data.name + 'score'] }}</td>
-                                    </ng-container>
-                                </ng-container>
-                            </tr>
-                        </ng-container>
-                        <tr>
-                            <ng-container *ngFor="let cat of processData.data">
-                                <ng-container *ngFor="let data of cat.characteristic">
-                                    <td colspan="3">
-                                        <span>
-                                            {{data.name}} score: {{data.ch_score === null ? 'N/A' : data.ch_score}} <br> Weight: {{data.weight}}%
-                                        </span>
-                                    </td>
-                                </ng-container>
-                            </ng-container>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <ng-container *ngFor="let data of processData.data">
-                                <td [attr.colspan]="data.characteristic.length*3">
-                                    <span>
-                                        {{data.name}} score: {{data.cat_score === null ? 'N/A' : data.cat_score}} <br> Weight: {{data.weight}}%
-                                    </span>
-                                </td>
-                            </ng-container>
-                        </tr>
-                    </ng-template>
-                </p-table>
-                <br>
-                <table>
-                    <tr></tr>
-                </table>
-                <br>
-                <table *ngIf="processData?.data?.length > 0">
-                    <tr class="table-header-left">
-                        <p style="font-size: large;">Category score - Process of change - {{score.process_score === null ? 'N/A' : score.process_score}}</p>
-                    </tr>
-                </table>
-                <br>
-                <table>
-                    <tr></tr>
-                </table>
-                <br>
-                <table *ngIf="outcomeData.scale_GHGs.length!=0 || outcomeData.scale_SDs.length!=0 || outcomeData.scale_adaptation.length!=0">
-                    <tr class="table-header-left">
-                        <p style="font-size: large;">Outcome of change - GHG</p>
-                    </tr>
-                </table>
-                <br>
-                <div class="row p-2" *ngIf="outcomeData.scale_GHGs.length!=0">
-                    <p-table [value]="[{}]" id="scale-ghg">
-                        <ng-template pTemplate="header">
-                            <tr>
-                                <th></th>
-                                <th>Characteristic</th>
-                                <th *ngIf="isDownloading">Starting situarion</th>
-                                <th *ngIf="isDownloading">Expected impact</th>
-                                <th>Score</th>
-                                <th colspan="2">Evidence provided?</th>
-                                <th>Scale/sustained score</th>
-                                <th>Weight</th>
-                                <th>Category score</th>
-                            </tr>
-                        </ng-template>
-
-                        <ng-template pTemplate="body" let-rowData>
-                            <ng-container *ngFor="let scale_GHGs of outcomeData.scale_GHGs;let i=index">
-                                <tr>
-                                    <td *ngIf="i === 0" [attr.rowspan]="outcomeData.scale_GHGs.length">Scale GHG</td>
-                                    <td>{{changeOutcomeCharacteristicsName(scale_GHGs.characteristic)}}</td>
-                                    <td *ngIf="isDownloading">{{scale_GHGs.starting_situation}}</td>
-                                    <td *ngIf="isDownloading">{{scale_GHGs.expected_impact}}</td>
-                                    <td>{{(scale_GHGs?.outcome_score)?getOutcomeScores((scale_GHGs?.outcome_score),'scale_GHGs',
-                                        scale_GHGs.characteristic):'-'}}</td>
-                                    <td>{{(scale_GHGs?.justification)?(scale_GHGs?.justification):'-'}} </td>
-                                    <td><a *ngIf="scale_GHGs?.document" target="_blank" [href]="fileServerURL+'/'+scale_GHGs?.document"><i class="pi pi-download download"></i></a></td>
-                                    <td *ngIf="i==0" [attr.rowspan]="outcomeData.scale_GHGs.length">{{score.outcome_score.scale_ghg_score === null ? 'N/A' : score.outcome_score.scale_ghg_score}}</td>
-                                    <td *ngIf="i==0" [attr.rowspan]="outcomeData.scale_GHGs.length + outcomeData.sustained_GHGs.length">{{scale_GHGs.weight}}%</td>
-                                    <td *ngIf="i==0" [attr.rowspan]="outcomeData.scale_GHGs.length + outcomeData.sustained_GHGs.length">{{score.outcome_score.ghg_score === null ? 'N/A' : score.outcome_score.ghg_score}}</td>
-                                </tr>
-                            </ng-container>
-                            <ng-container *ngFor="let sustained_GHGs of outcomeData.sustained_GHGs; let i = index">
-                                <tr>
-                                    <td *ngIf="i === 0" [attr.rowspan]="outcomeData.sustained_GHGs.length">Sustained GHG</td>
-                                    <td>{{changeOutcomeCharacteristicsName(sustained_GHGs.characteristic)}}</td>
-                                    <td *ngIf="isDownloading">-</td>
-                                    <td *ngIf="isDownloading">-</td>
-                                    <td>{{(sustained_GHGs?.outcome_score)?getOutcomeScores((sustained_GHGs?.outcome_score),'sustained_GHGs',
-                                        sustained_GHGs.characteristic):'-'}}</td>
-                                    <td>{{(sustained_GHGs?.justification)?(sustained_GHGs?.justification):'-'}} </td>
-                                    <td><a *ngIf="sustained_GHGs?.document" target="_blank" [href]="fileServerURL+'/'+sustained_GHGs?.document"><i class="pi pi-download download"></i></a></td>
-                                    <td *ngIf="i==0" [attr.rowspan]="outcomeData.sustained_GHGs.length">{{score.outcome_score.sustained_ghg_score === null ? 'N/A' : score.outcome_score.sustained_ghg_score}}</td>
-                            </ng-container>
-                        </ng-template>
-                    </p-table>
-                </div>
-                <table>
-                    <tr></tr>
-                </table>
-                <div class="row p-2" *ngIf="outcomeData.scale_SDs.length!=0">
-                    <br>
-                    <br>
-                    <table>
-                        <tr class="table-header-left">
-                            <p style="font-size: large;">Outcome of change - SDGs</p>
-                        </tr>
-                    </table>
-                    <br>
-                    <p-table [value]="[{}]">
-                        <ng-template pTemplate="header">
-                            <tr>
-                                <th></th>
-                                <th>SDG</th>
-                                <th>Characteristic</th>
-                                <th *ngIf="isDownloading">SDG indicator</th>
-                                <th *ngIf="isDownloading">Starting situation</th>
-                                <th *ngIf="isDownloading">Expected impact</th>
-                                <th>Score</th>
-                                <th colspan="2">Evidence provided?</th>
-                                <th>Scale/sustained score</th>
-                                <th>Weight</th>
-                                <th>Category score</th>
-                            </tr>
-                        </ng-template>
-
-                        <ng-template pTemplate="body" let-rowData>
-                            <ng-container *ngFor="let scale_SDs of outcomeData.scale_SDs;let i=index">
-                                <tr>
-                                    <td *ngIf="i === 0" [attr.rowspan]="outcomeData.scale_SDs.length">Scale SDG</td>
-                                    <td>{{scale_SDs?.SDG}}</td>
-                                    <td>{{changeOutcomeCharacteristicsName(scale_SDs.characteristic)}}</td>
-                                    <td *ngIf="isDownloading">{{scale_SDs.SDG_indicator}}</td>
-                                    <td *ngIf="isDownloading">{{scale_SDs.starting_situation}}</td>
-                                    <td *ngIf="isDownloading">{{scale_SDs.expected_impact}}</td>
-                                    <td>{{(scale_SDs?.outcome_score)?getOutcomeScores((scale_SDs?.outcome_score),'scale_SDs',
-                                        scale_SDs.characteristic):'-'}}</td>
-                                    <td>{{(scale_SDs?.justification)?(scale_SDs?.justification):'-'}} </td>
-                                    <td><a *ngIf="scale_SDs?.document" target="_blank" [href]="fileServerURL+'/'+scale_SDs?.document"><i class="pi pi-download download"></i></a></td>
-                                    <td *ngIf="i==0" [attr.rowspan]="outcomeData.scale_SDs.length">{{score.outcome_score.scale_sdg_score === null ? 'N/A' : score.outcome_score.scale_sdg_score}}</td>
-                                    <td *ngIf="i==0" [attr.rowspan]="outcomeData.sustained_SDs.length + outcomeData.scale_SDs.length">
-                                        {{scale_SDs.weight}}%</td>
-                                    <td *ngIf="i==0" [attr.rowspan]="outcomeData.sustained_SDs.length + outcomeData.scale_SDs.length">
-                                        {{score.outcome_score.sdg_score === null ? 'N/A' : score.outcome_score.sdg_score}}</td>
-                                </tr>
-                            </ng-container>
-                            <ng-container *ngFor="let sustained_SDs of outcomeData.sustained_SDs; let i = index">
-                                <tr>
-                                    <td *ngIf="i === 0" [attr.rowspan]="outcomeData.sustained_SDs.length">Sustained SDG</td>
-                                    <td>{{sustained_SDs?.SDG}}</td>
-                                    <td>{{changeOutcomeCharacteristicsName(sustained_SDs.characteristic)}}</td>
-                                    <td *ngIf="isDownloading">-</td>
-                                    <td *ngIf="isDownloading">-</td>
-                                    <td *ngIf="isDownloading">-</td>
-                                    <td>{{(sustained_SDs?.outcome_score)?getOutcomeScores((sustained_SDs?.outcome_score),'sustained_SDs',
-                                        sustained_SDs.characteristic):'-'}}</td>
-                                    <td>{{(sustained_SDs?.justification)?(sustained_SDs?.justification):'-'}} </td>
-                                    <td><a *ngIf="sustained_SDs?.document" target="_blank" [href]="fileServerURL+'/'+sustained_SDs?.document"><i class="pi pi-download download"></i></a></td>
-                                    <td *ngIf="i==0" [attr.rowspan]="outcomeData.sustained_SDs.length">{{score.outcome_score.sustained_sdg_score === null ? 'N/A' : score.outcome_score.sustained_sdg_score}}</td>
-                                </tr>
-                            </ng-container>
-                        </ng-template>
-                    </p-table>
-                    <table>
-                        <tr></tr>
-                    </table>
-                    <br><br>
-                    <p-table [value]="selectedSdgs">
-                        <ng-template pTemplate="header">
-                            <tr>
-                                <th>SDG</th>
-                                <th>SDG score</th>
-                            </tr>
-                        </ng-template>
-                        <ng-template pTemplate="body" let-sdg>
-                            <tr>
-                                <td>{{sdg.name}}</td>
-                                <td>{{sdg.score === null ? 'N/A' : sdg.score}}</td>
-                            </tr>
-                        </ng-template>
-                    </p-table>
-                </div>
-                <br>
-                <table>
-                    <tr></tr>
-                </table>
-                <div class="row p-2" *ngIf="outcomeData.scale_adaptation.length!=0">
-                    <br>
-                    <br>
-                    <table>
-                        <tr class="table-header-left">
-                            <p style="font-size: large;">Outcome of change - Adaptation co-benifits</p>
-                        </tr>
-                    </table>
-                    <br>
-                    <p-table [value]="[{}]">
-                        <ng-template pTemplate="header">
-                            <tr>
-                                <th></th>
-                                <th>Characteristic</th>
-                                <th *ngIf="isDownloading">Adaptation co-benifit</th>
-                                <th *ngIf="isDownloading">Starting situation</th>
-                                <th *ngIf="isDownloading">Expected impact</th>
-                                <th>Score</th>
-                                <th colspan="2">Evidence provided?</th>
-                                <th>Scale/sustained score</th>
-                                <th>Weight</th>
-                                <th>Category score</th>
-                            </tr>
-                        </ng-template>
-
-                        <ng-template pTemplate="body" let-rowData>
-                            <ng-container *ngFor="let scale_ADs of outcomeData.scale_adaptation;let i=index">
-                                <tr>
-                                    <td *ngIf="i === 0" [attr.rowspan]="outcomeData.scale_adaptation.length">Scale Adaptation Co Benifits</td>
-                                    <td>{{changeOutcomeCharacteristicsName(scale_ADs.characteristic)}}</td>
-                                    <td *ngIf="isDownloading">{{scale_ADs.adaptation}}</td>
-                                    <td *ngIf="isDownloading">{{scale_ADs.starting_situation}}</td>
-                                    <td *ngIf="isDownloading">{{scale_ADs.expected_impact}}</td>
-                                    <td>{{(scale_ADs?.outcome_score)?getOutcomeScores((scale_ADs?.outcome_score),'scale_SDs',
-                                        scale_ADs.characteristic):'-'}}</td>
-                                    <td>{{(scale_ADs?.justification)?(scale_ADs?.justification):'-'}} </td>
-                                    <td><a *ngIf="scale_ADs?.document" target="_blank" [href]="fileServerURL+'/'+scale_ADs?.document"><i class="pi pi-download download"></i></a></td>
-                                    <td *ngIf="i==0" [attr.rowspan]="outcomeData.scale_adaptation.length">{{score.outcome_score.scale_adaptation_score === null ? 'N/A' : score.outcome_score.scale_adaptation_score}}</td>
-                                    <td *ngIf="i==0" [attr.rowspan]="outcomeData.scale_adaptation.length + outcomeData.sustained_adaptation.length">
-                                        {{scale_ADs.weight}}%</td>
-                                    <td *ngIf="i==0" [attr.rowspan]="outcomeData.scale_adaptation.length + outcomeData.sustained_adaptation.length">
-                                        {{score.outcome_score.adaptation_score === null ? 'N/A' : score.outcome_score.adaptation_score}}</td>
-                                </tr>
-                            </ng-container>
-                            <ng-container *ngFor="let sustained_ADs of outcomeData.sustained_adaptation; let i = index">
-                                <tr>
-                                    <td *ngIf="i === 0" [attr.rowspan]="outcomeData.sustained_adaptation.length">Sustained Adaptation Co Benifits</td>
-                                    <td>{{changeOutcomeCharacteristicsName(sustained_ADs.characteristic)}}</td>
-                                    <td *ngIf="isDownloading">-</td>
-                                    <td *ngIf="isDownloading">-</td>
-                                    <td *ngIf="isDownloading">-</td>
-                                    <td>{{(sustained_ADs?.outcome_score)?getOutcomeScores((sustained_ADs?.outcome_score),'sustained_SDs',
-                                        sustained_ADs.characteristic):'-'}}</td>
-                                    <td>{{(sustained_ADs?.justification)?(sustained_ADs?.justification):'-'}} </td>
-                                    <td><a *ngIf="sustained_ADs?.document" target="_blank" [href]="fileServerURL+'/'+sustained_ADs?.document"><i class="pi pi-download download"></i></a></td>
-                                    <td *ngIf="i==0" [attr.rowspan]="outcomeData.sustained_adaptation.length">{{score.outcome_score.sustained_adaptation_score === null ? 'N/A' : score.outcome_score.sustained_adaptation_score}}</td>
-                                </tr>
-                            </ng-container>
-                        </ng-template>
-                    </p-table>
-                </div>
-                <br>
-                <table>
-                    <tr></tr>
-                </table>
-                <br>
-                <table *ngIf="outcomeData.scale_GHGs.length!=0 || outcomeData.scale_SDs.length!=0 || outcomeData.scale_adaptation.length!=0">
-                    <tr class="table-header-left">
-                        <p style="font-size: large;">Category score - Outcome of change - {{score.outcome_score.outcome_score === null ? 'N/A' : score.outcome_score.outcome_score}}</p>
-                    </tr>
-                </table>
-                <br>
-                <div *ngIf="processData?.data?.length!=0 && (outcomeData.scale_GHGs.length!=0 || outcomeData.scale_SDs.length!=0 || outcomeData.scale_adaptation.length!=0)">
-                    <app-heat-map *ngIf="!isDownloading" id="heatmap" [xData]="xData" [yData]="yData" [score]="heatMapScore"></app-heat-map>
-                </div>
-
-            </div>
-        </div>
-    </div>
-    <div class="container pl-20 pr-20">
- 
-        <div class="d-flex flex-row-reverse mt-2 mb-2">
-          <button (click)="toDownloadExcel()" class="btn btn-primary btn-block">Download as Excel</button>
-          <button  class="btn btn-primary btn-block mr-20" label="Generate" (click)="generate()">Generate report</button>
+    <hr />
+    <div class="table-data">
+      <div
+        class="p-grid p-fluid col-md-12 col-sm-12"
+        *ngFor="let section of sections"
+      >
+        <br />
+        <table>
+          <tr class="table-header-left">
+            <p class="category-topic">
+              <u
+                ><b>{{ section }}</b>
+              </u>
+            </p>
+          </tr>
+        </table>
+        <br />
+        <table>
+          <tr></tr>
+        </table>
+        <div class="row p-2">
+          <p-table
+            [value]="results[section]"
+            sortField="question"
+            sortMode="single"
+            dataKey="criteria"
+            rowGroupMode="subheader"
+            groupRowsBy="criteria"
+            [tableStyle]="{ 'min-width': '70rem' }"
+            [expandedRowKeys]="expandedRows"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Criterion</th>
+                <th>Criterion met?</th>
+                <th>Evidence provided?</th>
+              </tr>
+            </ng-template>
+            <ng-template
+              pTemplate="groupheader"
+              let-criteria
+              let-rowIndex="rowIndex"
+              let-expanded="expanded"
+            >
+              <tr>
+                <td colspan="5">
+                  <button
+                    type="button"
+                    pButton
+                    pRipple
+                    [pRowToggler]="criteria"
+                    class="p-button-text p-button-rounded p-button-plain mr-2"
+                    [icon]="
+                      expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'
+                    "
+                  ></button>
+                  <span class="font-bold ml-2"
+                    >{{ criteria.criteria }}
+                    <span *ngIf="!criteria.satisfied"> ❌</span>
+                    <span *ngIf="criteria.satisfied"> ✅</span>
+                  </span>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="rowexpansion" let-criteria>
+              <tr>
+                <td>{{ criteria.short_label }}</td>
+                <td>{{ criteria.isPassing ? 'Yes' : 'No' }}</td>
+                <td *ngIf="criteria.hasEvidence === 'Yes'">
+                  <a
+                    href="#"
+                    (click)="
+                      $event.preventDefault(); downloadFiles(criteria.document)
+                    "
+                    >{{ criteria.hasEvidence }}</a
+                  >
+                </td>
+                <td *ngIf="criteria.hasEvidence === 'No'">
+                  {{ criteria.hasEvidence }}
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
         </div>
       </div>
-    <p-dialog [(visible)]="display">
-        <div class="container" style="width: 600px; height: 400px">
-          
-          
-            <div class="row p-2">
-                <div class="col-2">
-                    <div>
-                        <label for="sector">Report name</label>
-                    </div>
-                </div>
-                <div class="col-10">
-                    <div>
-                        <input [style]="{ width: '75%' }" type="text" name="reportName" class="p-inputtext"
-                            [(ngModel)]="reportName" pInputText />
-                    </div>
-                </div>
-            </div>
-            <div>
-                <button style="margin-right: 5px" pButton pRipple label="Generate" (click)="confirm()"></button>
-            </div>
+      <table>
+        <tr></tr>
+      </table>
+      <div class="p-grid p-fluid col-12">
+        <br />
+        <table>
+          <tr class="table-header-left">
+            <p class="category-topic">
+              <u><b>Transformational change criteria</b> </u>
+            </p>
+          </tr>
+        </table>
+        <br />
+        <table>
+          <tr></tr>
+        </table>
+        <table *ngIf="processData?.data?.length > 0">
+          <tr class="table-header-left">
+            <p style="font-size: large">Process of change</p>
+          </tr>
+        </table>
+        <br />
+        <p-table
+          *ngIf="processData?.data?.length > 0"
+          [value]="[{}]"
+          styleClass="p-datatable-gridlines"
+          [scrollable]="true"
+          scrollHeight="400px"
+          id="process-table"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th></th>
+              <ng-container *ngFor="let data of processData.data">
+                <th [attr.colspan]="data.characteristic.length * 3">
+                  {{ data.name }}
+                </th>
+              </ng-container>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-rowData>
+            <tr>
+              <ng-container *ngFor="let cat of processData.data; let i = index">
+                <ng-container
+                  *ngFor="let data of cat.characteristic; let idx = index"
+                >
+                  <td *ngIf="i === 0 && idx === 0" rowspan="2">Relevance</td>
+                  <td colspan="3">{{ data.name }}</td>
+                </ng-container>
+              </ng-container>
+            </tr>
+            <tr>
+              <ng-container *ngFor="let cat of processData.data">
+                <ng-container *ngFor="let data of cat.characteristic">
+                  <td colspan="3">{{ getRelevance(data.relevance) }}</td>
+                </ng-container>
+              </ng-container>
+            </tr>
+            <tr>
+              <td [attr.rowspan]="processData.guidingQuestions?.length + 2">
+                Score
+              </td>
+              <ng-container *ngFor="let cat of processData.data">
+                <ng-container *ngFor="let data of cat.characteristic">
+                  <td>Guiding question</td>
+                  <td>Weight</td>
+                  <td>Score</td>
+                </ng-container>
+              </ng-container>
+            </tr>
+            <ng-container *ngFor="let question of processData.guidingQuestions">
+              <tr>
+                <ng-container *ngFor="let cat of processData.data">
+                  <ng-container *ngFor="let data of cat.characteristic">
+                    <td>{{ question[data.name + ' question'] }}</td>
+                    <td>{{ question[data.name + ' weight'] }}%</td>
+                    <td>{{ question[data.name + ' score'] }}</td>
+                  </ng-container>
+                </ng-container>
+              </tr>
+            </ng-container>
+            <tr>
+              <ng-container *ngFor="let cat of processData.data">
+                <ng-container *ngFor="let data of cat.characteristic">
+                  <td colspan="3">
+                    <span>
+                      {{ data.name }} score:
+                      {{ data.ch_score === null ? 'N/A' : data.ch_score }}
+                      <br />
+                      Weight: {{ data.weight }}%
+                    </span>
+                  </td>
+                </ng-container>
+              </ng-container>
+            </tr>
+            <tr>
+              <td></td>
+              <ng-container *ngFor="let data of processData.data">
+                <td [attr.colspan]="data.characteristic.length * 3">
+                  <span>
+                    {{ data.name }} score:
+                    {{ data.cat_score === null ? 'N/A' : data.cat_score }}
+                    <br />
+                    Weight: {{ data.weight }}%
+                  </span>
+                </td>
+              </ng-container>
+            </tr>
+          </ng-template>
+        </p-table>
+        <br />
+        <table>
+          <tr></tr>
+        </table>
+        <br />
+        <table *ngIf="processData?.data?.length > 0">
+          <tr class="table-header-left">
+            <p style="font-size: large">
+              Category score - Process of change -
+              {{ score.process_score === null ? 'N/A' : score.process_score }}
+            </p>
+          </tr>
+        </table>
+        <br />
+        <table>
+          <tr></tr>
+        </table>
+        <br />
+        <table
+          *ngIf="
+            outcomeData.scale_GHGs.length != 0 ||
+            outcomeData.scale_SDs.length != 0 ||
+            outcomeData.scale_adaptation.length != 0
+          "
+        >
+          <tr class="table-header-left">
+            <p style="font-size: large">Outcome of change - GHG</p>
+          </tr>
+        </table>
+        <br />
+        <div class="row p-2" *ngIf="outcomeData.scale_GHGs.length != 0">
+          <p-table [value]="[{}]" id="scale-ghg">
+            <ng-template pTemplate="header">
+              <tr>
+                <th></th>
+                <th>Characteristic</th>
+                <th *ngIf="isDownloading">Starting situarion</th>
+                <th *ngIf="isDownloading">Expected impact</th>
+                <th>Score</th>
+                <th colspan="2">Evidence provided?</th>
+                <th>Scale/sustained score</th>
+                <th>Weight</th>
+                <th>Category score</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-rowData>
+              <ng-container
+                *ngFor="let scale_GHGs of outcomeData.scale_GHGs; let i = index"
+              >
+                <tr>
+                  <td
+                    *ngIf="i === 0"
+                    [attr.rowspan]="outcomeData.scale_GHGs.length"
+                  >
+                    Scale GHG
+                  </td>
+                  <td>
+                    {{
+                      changeOutcomeCharacteristicsName(
+                        scale_GHGs.characteristic
+                      )
+                    }}
+                  </td>
+                  <td *ngIf="isDownloading">
+                    {{ scale_GHGs.starting_situation }}
+                  </td>
+                  <td *ngIf="isDownloading">
+                    {{ scale_GHGs.expected_impact }}
+                  </td>
+                  <td>
+                    {{
+                      scale_GHGs?.outcome_score
+                        ? getOutcomeScores(
+                            scale_GHGs?.outcome_score,
+                            'scale_GHGs',
+                            scale_GHGs.characteristic
+                          )
+                        : '-'
+                    }}
+                  </td>
+                  <td>
+                    {{
+                      scale_GHGs?.justification
+                        ? scale_GHGs?.justification
+                        : '-'
+                    }}
+                  </td>
+                  <td>
+                    <a
+                      *ngIf="scale_GHGs?.document"
+                      target="_blank"
+                      [href]="fileServerURL + '/' + scale_GHGs?.document"
+                      ><i class="pi pi-download download"></i
+                    ></a>
+                  </td>
+                  <td
+                    *ngIf="i == 0"
+                    [attr.rowspan]="outcomeData.scale_GHGs.length"
+                  >
+                    {{
+                      score.outcome_score.scale_ghg_score === null
+                        ? 'N/A'
+                        : score.outcome_score.scale_ghg_score
+                    }}
+                  </td>
+                  <td
+                    *ngIf="i == 0"
+                    [attr.rowspan]="
+                      outcomeData.scale_GHGs.length +
+                      outcomeData.sustained_GHGs.length
+                    "
+                  >
+                    {{ scale_GHGs.weight }}%
+                  </td>
+                  <td
+                    *ngIf="i == 0"
+                    [attr.rowspan]="
+                      outcomeData.scale_GHGs.length +
+                      outcomeData.sustained_GHGs.length
+                    "
+                  >
+                    {{
+                      score.outcome_score.ghg_score === null
+                        ? 'N/A'
+                        : score.outcome_score.ghg_score
+                    }}
+                  </td>
+                </tr>
+              </ng-container>
+              <ng-container
+                *ngFor="
+                  let sustained_GHGs of outcomeData.sustained_GHGs;
+                  let i = index
+                "
+              >
+                <tr>
+                  <td
+                    *ngIf="i === 0"
+                    [attr.rowspan]="outcomeData.sustained_GHGs.length"
+                  >
+                    Sustained GHG
+                  </td>
+                  <td>
+                    {{
+                      changeOutcomeCharacteristicsName(
+                        sustained_GHGs.characteristic
+                      )
+                    }}
+                  </td>
+                  <td *ngIf="isDownloading">-</td>
+                  <td *ngIf="isDownloading">-</td>
+                  <td>
+                    {{
+                      sustained_GHGs?.outcome_score
+                        ? getOutcomeScores(
+                            sustained_GHGs?.outcome_score,
+                            'sustained_GHGs',
+                            sustained_GHGs.characteristic
+                          )
+                        : '-'
+                    }}
+                  </td>
+                  <td>
+                    {{
+                      sustained_GHGs?.justification
+                        ? sustained_GHGs?.justification
+                        : '-'
+                    }}
+                  </td>
+                  <td>
+                    <a
+                      *ngIf="sustained_GHGs?.document"
+                      target="_blank"
+                      [href]="fileServerURL + '/' + sustained_GHGs?.document"
+                      ><i class="pi pi-download download"></i
+                    ></a>
+                  </td>
+                  <td
+                    *ngIf="i == 0"
+                    [attr.rowspan]="outcomeData.sustained_GHGs.length"
+                  >
+                    {{
+                      score.outcome_score.sustained_ghg_score === null
+                        ? 'N/A'
+                        : score.outcome_score.sustained_ghg_score
+                    }}
+                  </td>
+                </tr></ng-container
+              >
+            </ng-template>
+          </p-table>
         </div>
-      </p-dialog>
+        <table>
+          <tr></tr>
+        </table>
+        <div class="row p-2" *ngIf="outcomeData.scale_SDs.length != 0">
+          <br />
+          <br />
+          <table>
+            <tr class="table-header-left">
+              <p style="font-size: large">Outcome of change - SDGs</p>
+            </tr>
+          </table>
+          <br />
+          <p-table [value]="[{}]">
+            <ng-template pTemplate="header">
+              <tr>
+                <th></th>
+                <th>SDG</th>
+                <th>Characteristic</th>
+                <th *ngIf="isDownloading">SDG indicator</th>
+                <th *ngIf="isDownloading">Starting situation</th>
+                <th *ngIf="isDownloading">Expected impact</th>
+                <th>Score</th>
+                <th colspan="2">Evidence provided?</th>
+                <th>Scale/sustained score</th>
+                <th>Weight</th>
+                <th>Category score</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-rowData>
+              <ng-container
+                *ngFor="let scale_SDs of outcomeData.scale_SDs; let i = index"
+              >
+                <tr>
+                  <td
+                    *ngIf="i === 0"
+                    [attr.rowspan]="outcomeData.scale_SDs.length"
+                  >
+                    Scale SDG
+                  </td>
+                  <td>{{ scale_SDs?.SDG }}</td>
+                  <td>
+                    {{
+                      changeOutcomeCharacteristicsName(scale_SDs.characteristic)
+                    }}
+                  </td>
+                  <td *ngIf="isDownloading">{{ scale_SDs.SDG_indicator }}</td>
+                  <td *ngIf="isDownloading">
+                    {{ scale_SDs.starting_situation }}
+                  </td>
+                  <td *ngIf="isDownloading">{{ scale_SDs.expected_impact }}</td>
+                  <td>
+                    {{
+                      scale_SDs?.outcome_score
+                        ? getOutcomeScores(
+                            scale_SDs?.outcome_score,
+                            'scale_SDs',
+                            scale_SDs.characteristic
+                          )
+                        : '-'
+                    }}
+                  </td>
+                  <td>
+                    {{
+                      scale_SDs?.justification ? scale_SDs?.justification : '-'
+                    }}
+                  </td>
+                  <td>
+                    <a
+                      *ngIf="scale_SDs?.document"
+                      target="_blank"
+                      [href]="fileServerURL + '/' + scale_SDs?.document"
+                      ><i class="pi pi-download download"></i
+                    ></a>
+                  </td>
+                  <td
+                    *ngIf="i == 0"
+                    [attr.rowspan]="outcomeData.scale_SDs.length"
+                  >
+                    {{
+                      score.outcome_score.scale_sdg_score === null
+                        ? 'N/A'
+                        : score.outcome_score.scale_sdg_score
+                    }}
+                  </td>
+                  <td
+                    *ngIf="i == 0"
+                    [attr.rowspan]="
+                      outcomeData.sustained_SDs.length +
+                      outcomeData.scale_SDs.length
+                    "
+                  >
+                    {{ scale_SDs.weight }}%
+                  </td>
+                  <td
+                    *ngIf="i == 0"
+                    [attr.rowspan]="
+                      outcomeData.sustained_SDs.length +
+                      outcomeData.scale_SDs.length
+                    "
+                  >
+                    {{
+                      score.outcome_score.sdg_score === null
+                        ? 'N/A'
+                        : score.outcome_score.sdg_score
+                    }}
+                  </td>
+                </tr>
+              </ng-container>
+              <ng-container
+                *ngFor="
+                  let sustained_SDs of outcomeData.sustained_SDs;
+                  let i = index
+                "
+              >
+                <tr>
+                  <td
+                    *ngIf="i === 0"
+                    [attr.rowspan]="outcomeData.sustained_SDs.length"
+                  >
+                    Sustained SDG
+                  </td>
+                  <td>{{ sustained_SDs?.SDG }}</td>
+                  <td>
+                    {{
+                      changeOutcomeCharacteristicsName(
+                        sustained_SDs.characteristic
+                      )
+                    }}
+                  </td>
+                  <td *ngIf="isDownloading">-</td>
+                  <td *ngIf="isDownloading">-</td>
+                  <td *ngIf="isDownloading">-</td>
+                  <td>
+                    {{
+                      sustained_SDs?.outcome_score
+                        ? getOutcomeScores(
+                            sustained_SDs?.outcome_score,
+                            'sustained_SDs',
+                            sustained_SDs.characteristic
+                          )
+                        : '-'
+                    }}
+                  </td>
+                  <td>
+                    {{
+                      sustained_SDs?.justification
+                        ? sustained_SDs?.justification
+                        : '-'
+                    }}
+                  </td>
+                  <td>
+                    <a
+                      *ngIf="sustained_SDs?.document"
+                      target="_blank"
+                      [href]="fileServerURL + '/' + sustained_SDs?.document"
+                      ><i class="pi pi-download download"></i
+                    ></a>
+                  </td>
+                  <td
+                    *ngIf="i == 0"
+                    [attr.rowspan]="outcomeData.sustained_SDs.length"
+                  >
+                    {{
+                      score.outcome_score.sustained_sdg_score === null
+                        ? 'N/A'
+                        : score.outcome_score.sustained_sdg_score
+                    }}
+                  </td>
+                </tr>
+              </ng-container>
+            </ng-template>
+          </p-table>
+          <table>
+            <tr></tr>
+          </table>
+          <br /><br />
+          <p-table [value]="selectedSdgs">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>SDG</th>
+                <th>SDG score</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-sdg>
+              <tr>
+                <td>{{ sdg.name }}</td>
+                <td>{{ sdg.score === null ? 'N/A' : sdg.score }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+        <br />
+        <table>
+          <tr></tr>
+        </table>
+        <div class="row p-2" *ngIf="outcomeData.scale_adaptation.length != 0">
+          <br />
+          <br />
+          <table>
+            <tr class="table-header-left">
+              <p style="font-size: large">
+                Outcome of change - Adaptation co-benifits
+              </p>
+            </tr>
+          </table>
+          <br />
+          <p-table [value]="[{}]">
+            <ng-template pTemplate="header">
+              <tr>
+                <th></th>
+                <th>Characteristic</th>
+                <th *ngIf="isDownloading">Adaptation co-benifit</th>
+                <th *ngIf="isDownloading">Starting situation</th>
+                <th *ngIf="isDownloading">Expected impact</th>
+                <th>Score</th>
+                <th colspan="2">Evidence provided?</th>
+                <th>Scale/sustained score</th>
+                <th>Weight</th>
+                <th>Category score</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-rowData>
+              <ng-container
+                *ngFor="
+                  let scale_ADs of outcomeData.scale_adaptation;
+                  let i = index
+                "
+              >
+                <tr>
+                  <td
+                    *ngIf="i === 0"
+                    [attr.rowspan]="outcomeData.scale_adaptation.length"
+                  >
+                    Scale Adaptation Co Benifits
+                  </td>
+                  <td>
+                    {{
+                      changeOutcomeCharacteristicsName(scale_ADs.characteristic)
+                    }}
+                  </td>
+                  <td *ngIf="isDownloading">{{ scale_ADs.adaptation }}</td>
+                  <td *ngIf="isDownloading">
+                    {{ scale_ADs.starting_situation }}
+                  </td>
+                  <td *ngIf="isDownloading">{{ scale_ADs.expected_impact }}</td>
+                  <td>
+                    {{
+                      scale_ADs?.outcome_score
+                        ? getOutcomeScores(
+                            scale_ADs?.outcome_score,
+                            'scale_SDs',
+                            scale_ADs.characteristic
+                          )
+                        : '-'
+                    }}
+                  </td>
+                  <td>
+                    {{
+                      scale_ADs?.justification ? scale_ADs?.justification : '-'
+                    }}
+                  </td>
+                  <td>
+                    <a
+                      *ngIf="scale_ADs?.document"
+                      target="_blank"
+                      [href]="fileServerURL + '/' + scale_ADs?.document"
+                      ><i class="pi pi-download download"></i
+                    ></a>
+                  </td>
+                  <td
+                    *ngIf="i == 0"
+                    [attr.rowspan]="outcomeData.scale_adaptation.length"
+                  >
+                    {{
+                      score.outcome_score.scale_adaptation_score === null
+                        ? 'N/A'
+                        : score.outcome_score.scale_adaptation_score
+                    }}
+                  </td>
+                  <td
+                    *ngIf="i == 0"
+                    [attr.rowspan]="
+                      outcomeData.scale_adaptation.length +
+                      outcomeData.sustained_adaptation.length
+                    "
+                  >
+                    {{ scale_ADs.weight }}%
+                  </td>
+                  <td
+                    *ngIf="i == 0"
+                    [attr.rowspan]="
+                      outcomeData.scale_adaptation.length +
+                      outcomeData.sustained_adaptation.length
+                    "
+                  >
+                    {{
+                      score.outcome_score.adaptation_score === null
+                        ? 'N/A'
+                        : score.outcome_score.adaptation_score
+                    }}
+                  </td>
+                </tr>
+              </ng-container>
+              <ng-container
+                *ngFor="
+                  let sustained_ADs of outcomeData.sustained_adaptation;
+                  let i = index
+                "
+              >
+                <tr>
+                  <td
+                    *ngIf="i === 0"
+                    [attr.rowspan]="outcomeData.sustained_adaptation.length"
+                  >
+                    Sustained Adaptation Co Benifits
+                  </td>
+                  <td>
+                    {{
+                      changeOutcomeCharacteristicsName(
+                        sustained_ADs.characteristic
+                      )
+                    }}
+                  </td>
+                  <td *ngIf="isDownloading">-</td>
+                  <td *ngIf="isDownloading">-</td>
+                  <td *ngIf="isDownloading">-</td>
+                  <td>
+                    {{
+                      sustained_ADs?.outcome_score
+                        ? getOutcomeScores(
+                            sustained_ADs?.outcome_score,
+                            'sustained_SDs',
+                            sustained_ADs.characteristic
+                          )
+                        : '-'
+                    }}
+                  </td>
+                  <td>
+                    {{
+                      sustained_ADs?.justification
+                        ? sustained_ADs?.justification
+                        : '-'
+                    }}
+                  </td>
+                  <td>
+                    <a
+                      *ngIf="sustained_ADs?.document"
+                      target="_blank"
+                      [href]="fileServerURL + '/' + sustained_ADs?.document"
+                      ><i class="pi pi-download download"></i
+                    ></a>
+                  </td>
+                  <td
+                    *ngIf="i == 0"
+                    [attr.rowspan]="outcomeData.sustained_adaptation.length"
+                  >
+                    {{
+                      score.outcome_score.sustained_adaptation_score === null
+                        ? 'N/A'
+                        : score.outcome_score.sustained_adaptation_score
+                    }}
+                  </td>
+                </tr>
+              </ng-container>
+            </ng-template>
+          </p-table>
+        </div>
+        <br />
+        <table>
+          <tr></tr>
+        </table>
+        <br />
+        <table
+          *ngIf="
+            outcomeData.scale_GHGs.length != 0 ||
+            outcomeData.scale_SDs.length != 0 ||
+            outcomeData.scale_adaptation.length != 0
+          "
+        >
+          <tr class="table-header-left">
+            <p style="font-size: large">
+              Category score - Outcome of change -
+              {{
+                score.outcome_score.outcome_score === null
+                  ? 'N/A'
+                  : score.outcome_score.outcome_score
+              }}
+            </p>
+          </tr>
+        </table>
+        <br />
+        <div
+          *ngIf="
+            processData?.data?.length != 0 &&
+            (outcomeData.scale_GHGs.length != 0 ||
+              outcomeData.scale_SDs.length != 0 ||
+              outcomeData.scale_adaptation.length != 0)
+          "
+        >
+          <app-heat-map
+            *ngIf="!isDownloading"
+            id="heatmap"
+            [xData]="xData"
+            [yData]="yData"
+            [score]="heatMapScore"
+          ></app-heat-map>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container pl-20 pr-20">
+    <div class="d-flex flex-row-reverse mt-2 mb-2">
+      <button (click)="toDownloadExcel()" class="btn btn-primary btn-block">
+        Download as Excel
+      </button>
+      <button
+        class="btn btn-primary btn-block mr-20"
+        label="Generate"
+        (click)="generate()"
+      >
+        Generate report
+      </button>
+    </div>
+  </div>
+  <p-dialog [(visible)]="display">
+    <div class="container" style="width: 600px; height: 400px">
+      <div class="row p-2">
+        <div class="col-2">
+          <div>
+            <label for="sector">Report name</label>
+          </div>
+        </div>
+        <div class="col-10">
+          <div>
+            <input
+              [style]="{ width: '75%' }"
+              type="text"
+              name="reportName"
+              class="p-inputtext"
+              [(ngModel)]="reportName"
+              pInputText
+            />
+          </div>
+        </div>
+      </div>
+      <div>
+        <button
+          style="margin-right: 5px"
+          pButton
+          pRipple
+          label="Generate"
+          (click)="confirm()"
+        ></button>
+      </div>
+    </div>
+  </p-dialog>
+</div>
