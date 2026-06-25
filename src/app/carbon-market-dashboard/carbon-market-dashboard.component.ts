@@ -9,6 +9,7 @@ import { Paginator } from 'primeng/paginator';
 import { LazyLoadEvent } from 'primeng/api';
 import { OverlayPanel } from 'primeng/overlaypanel';
 import { HeatMapScore, TableData } from 'app/charts/heat-map/heat-map.component';
+import { scoresMatchMatrixCell } from 'app/shared/score-rounding.util';
 import { ActivatedRoute, Router } from '@angular/router';
 @Component({
   selector: 'app-carbon-market-dashboard',
@@ -594,7 +595,9 @@ sectorCountResult(){
   }
 
   getIntervention(p:number, q: number){
-    return this.tableData.some(item => item.outcome_score === p && item.process_score === q);
+    return this.tableData.some(item =>
+      scoresMatchMatrixCell(item.process_score, item.outcome_score, q, p),
+    );
   }
   paginate(event:Paginator|undefined) {
     if (event){
@@ -638,7 +641,9 @@ sectorCountResult(){
   enterHeatMapPoint(x:number, y: number,event:any){
 
  
-    this.pointTableDatas=this.tableData.filter(item=> item.outcome_score === x && item.process_score === y)
+    this.pointTableDatas=this.tableData.filter(item=>
+      scoresMatchMatrixCell(item.process_score, item.outcome_score, y, x),
+    )
     if(this.pointTableDatas.length>0){
       this.op.show(event);
     }

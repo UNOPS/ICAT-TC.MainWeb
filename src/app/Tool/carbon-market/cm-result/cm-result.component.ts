@@ -8,6 +8,7 @@ import { MasterDataDto, MasterDataService } from 'app/shared/master-data.service
 import { environment } from 'environments/environment';
 import { SDG } from '../cm-section-three/cm-section-three.component';
 import { HeatMapScore } from 'app/charts/heat-map/heat-map.component';
+import { scoresMatchMatrixCell } from 'app/shared/score-rounding.util';
 import * as moment from 'moment';
 import { MessageService } from 'primeng/api';
 
@@ -38,6 +39,8 @@ export class CmResultComponent implements OnInit {
   sustained_GHG_score: ScoreDto[]
   scale_SD_score: ScoreDto[]
   sustained_SD_score: ScoreDto[]
+  adaptation_scale_score: ScoreDto[]
+  adaptation_sustained_score: ScoreDto[]
   relevances: any
 
   xData: {label: string; value: number}[]
@@ -71,6 +74,8 @@ export class CmResultComponent implements OnInit {
       this.sustained_GHG_score=this.masterDataService.GHG_sustained_score;
       this.scale_SD_score =this.masterDataService.SDG_scale_score;
       this.sustained_SD_score=this.masterDataService.SDG_sustained_score;
+      this.adaptation_scale_score = this.masterDataService.adaptation_scale_score;
+      this.adaptation_sustained_score = this.masterDataService.adaptation_sustained_score;
       this.relevances = this.masterDataService.relevance
       this.xData = this.masterDataService.xData
       this.yData = this.masterDataService.yData
@@ -136,7 +141,13 @@ export class CmResultComponent implements OnInit {
   }
 
   getIntervention(x:number, y: number){
-    if (this.score.process_score === y && this.score.outcome_score.outcome_score === x){
+    const processScore = this.score?.process_score;
+    const outcomeScore = this.score?.outcome_score?.outcome_score;
+    if (
+      processScore != null &&
+      outcomeScore != null &&
+      scoresMatchMatrixCell(processScore, outcomeScore, y, x)
+    ) {
       return true
     } else {
       return false
@@ -197,146 +208,210 @@ export class CmResultComponent implements OnInit {
   }
 
   toDownloadExcel() {
-    let colorMap = this.createColorMap()
-    this.isDownloading = true
-    setTimeout(() =>{
-      let book_name = 'Results - ' + this.intervention.policyName
-  
-      const workbook = XLSX.utils.book_new();
-      const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.card, { skipHeader: true });
-      let table = document.getElementById('cmtool')
-      let worksheet = XLSX.utils.table_to_sheet(table,{})
-      this.isDownloading = false
-      setTimeout(() => {
-        XLSX.utils.book_append_sheet(workbook, ws, 'Assessment Info');
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Assessment Results');
-        let doc = document.getElementById('heatmap')
-        let heatmap
-        if (doc){ 
-          heatmap = XLSX.utils.table_to_sheet(doc,{})
-          XLSX.utils.book_append_sheet(workbook, heatmap, 'Score map');
-          for (const itm of colorMap) {
-            if (heatmap[itm.cell]) {
-              heatmap[itm.cell].s = {
-                fill: { fgColor: { rgb: itm.color } },
-                font: { color: { rgb: itm.color } }
-              };
-            }
-          }
+    const book_name = 'Results - ' + this.intervention.policyName;
+    const workbook = XLSX.utils.book_new();
+    const infoWs: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.card, {
+      skipHeader: true,
+    });
+    XLSX.utils.book_append_sheet(workbook, infoWs, 'Assessment Info');
+    XLSX.utils.book_append_sheet(
+      workbook,
+      this.buildAssessmentResultsSheet(),
+      'Assessment Results',
+    );
+
+    const colorMap = this.createColorMap();
+    const heatmapEl = document.getElementById('heatmap');
+    if (heatmapEl) {
+      const heatmap = XLSX.utils.table_to_sheet(heatmapEl, {});
+      for (const itm of colorMap) {
+        if (heatmap[itm.cell]) {
+          heatmap[itm.cell].s = {
+            fill: { fgColor: { rgb: itm.color } },
+            font: { color: { rgb: itm.color } },
+          };
         }
+      }
+      XLSX.utils.book_append_sheet(workbook, heatmap, 'Score map');
+    }
 
-        XLSX.writeFile(workbook, book_name + ".xlsx", {cellStyles: true});
-      }, 1000);
-      this.isDownloading = false
-    }, 1000)
+    XLSX.writeFile(workbook, book_name + '.xlsx', { cellStyles: true });
   }
 
-  _toDownloadExcel(){ 
-    let length = 0
-    let book_name = 'Results - ' + this.intervention.policyName
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.card, { skipHeader: true });
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+  private buildAssessmentResultsSheet(): XLSX.WorkSheet {
+    let length = 0;
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet([], {
+      skipHeader: true,
+    });
 
-    length = length + this.card.length + 2
+    length = length + this.card.length + 2;
 
-    this.sections.forEach(section => {
-      XLSX.utils.sheet_add_json(ws, [{section: section}], { skipHeader: true, origin: "A" + length });
-      length = length + 2
-      XLSX.utils.sheet_add_json(ws, this.results[section], { skipHeader: false, origin: "A" + length });
-      length = length + this.results[section].length + 2
-    })
-    XLSX.utils.sheet_add_json(ws, [{title: 'Transformational change criteria'}], { skipHeader: true, origin: "A" + length });
-    length = length + 2
+    this.sections.forEach((section) => {
+      XLSX.utils.sheet_add_json(ws, [{ section: section }], {
+        skipHeader: true,
+        origin: 'A' + length,
+      });
+      length = length + 2;
+      XLSX.utils.sheet_add_json(ws, this.results[section], {
+        skipHeader: false,
+        origin: 'A' + length,
+      });
+      length = length + this.results[section].length + 2;
+    });
 
-    let processData =  this._mapProcessData()
+    XLSX.utils.sheet_add_json(
+      ws,
+      [{ title: 'Transformational change criteria' }],
+      { skipHeader: true, origin: 'A' + length },
+    );
+    length = length + 2;
 
-    if (processData.technology && processData.technology.length!=0){
-      XLSX.utils.sheet_add_json(ws, [{title: 'Process of change / Technology'}], { skipHeader: true, origin: "A" + length });
-      length = length + 2
-      XLSX.utils.sheet_add_json(ws, processData.technology, { skipHeader: false, origin: "A" + length });
-      length = length + this.processData.technology.length + 2
-    }
-    if (processData.incentives && processData.incentives.length!=0){
-      XLSX.utils.sheet_add_json(ws, [{title: 'Process of change / Incentives'}], { skipHeader: true, origin: "A" + length });
-      length = length + 2
-      XLSX.utils.sheet_add_json(ws, processData.incentives, { skipHeader: false, origin: "A" + length });
-      length = length + this.processData.incentives.length + 2
-    }
-    if (processData.norms && processData.norms.length!=0){
-      XLSX.utils.sheet_add_json(ws, [{title: 'Process of change / Norms'}], { skipHeader: true, origin: "A" + length });
-      length = length + 2
-      XLSX.utils.sheet_add_json(ws, processData.norms, { skipHeader: false, origin: "A" + length });
-      length = length + this.processData.norms.length + 2
-    }
+    const outcomeData = this.mapOutcomeData();
+    length = this.appendOutcomeSection(
+      ws,
+      length,
+      'Outcome of change / Scale GHGs',
+      outcomeData.scaleGHGs,
+    );
+    length = this.appendOutcomeSection(
+      ws,
+      length,
+      'Outcome of change / Sustained GHGs',
+      outcomeData.sustainedGHGs,
+    );
+    length = this.appendOutcomeSection(
+      ws,
+      length,
+      'Outcome of change / Scale SDs',
+      outcomeData.scaleSDs,
+    );
+    length = this.appendOutcomeSection(
+      ws,
+      length,
+      'Outcome of change / Sustained SDs',
+      outcomeData.sustainedSDs,
+    );
+    length = this.appendOutcomeSection(
+      ws,
+      length,
+      'Outcome of change / Scale Adaptation',
+      outcomeData.scaleAdaptation,
+    );
+    length = this.appendOutcomeSection(
+      ws,
+      length,
+      'Outcome of change / Sustained Adaptation',
+      outcomeData.sustainedAdaptation,
+    );
 
-    let outcomeData = this.mapOutcomeData()
-    if (outcomeData.scaleGHGs && outcomeData.scaleGHGs.length!=0){
-      XLSX.utils.sheet_add_json(ws, [{title: 'Outcome of change / Scale GHGs'}], { skipHeader: true, origin: "A" + length });
-      length = length + 2
-      XLSX.utils.sheet_add_json(ws, outcomeData.scaleGHGs, { skipHeader: false, origin: "A" + length });
-      length = length + outcomeData.scaleGHGs.length + 2
-    }
-    if (outcomeData.sustainedGHGs && outcomeData.sustainedGHGs.length!=0){
-      XLSX.utils.sheet_add_json(ws, [{title: 'Outcome of change / Sustained GHGs'}], { skipHeader: true, origin: "A" + length });
-      length = length + 2
-      XLSX.utils.sheet_add_json(ws, outcomeData.sustainedGHGs, { skipHeader: false, origin: "A" + length });
-      length = length + outcomeData.scaleGHGs.length + 2
-    }
-    if (outcomeData.scaleSDs && outcomeData.scaleSDs.length!=0){
-      XLSX.utils.sheet_add_json(ws, [{title: 'Outcome of change / Scale SDs'}], { skipHeader: true, origin: "A" + length });
-      length = length + 2
-      XLSX.utils.sheet_add_json(ws, outcomeData.scaleSDs, { skipHeader: false, origin: "A" + length });
-      length = length + outcomeData.scaleSDs.length + 2
-    }
-    if (outcomeData.sustainedSDs && outcomeData.sustainedSDs.length!=0){
-      XLSX.utils.sheet_add_json(ws, [{title: 'Outcome of change / Sustained SDs'}], { skipHeader: true, origin: "A" + length });
-      length = length + 2
-      XLSX.utils.sheet_add_json(ws, outcomeData.sustainedSDs, { skipHeader: false, origin: "A" + length });
-      length = length + outcomeData.sustainedSDs.length + 2
-    }
+    XLSX.utils.sheet_add_json(
+      ws,
+      [{ title: 'Aggregate outcome categories assessment' }],
+      { skipHeader: true, origin: 'A' + length },
+    );
+    length = length + 2;
+    XLSX.utils.sheet_add_json(ws, this.buildOutcomeSummaryRows(), {
+      skipHeader: false,
+      origin: 'A' + length,
+    });
+    length = length + this.buildOutcomeSummaryRows().length + 2;
 
-    XLSX.utils.sheet_add_json(ws, [{title: 'Transformational Change', value: this.score}], { skipHeader: true, origin: "A" + length });
+    XLSX.utils.sheet_add_json(
+      ws,
+      [
+        {
+          title: 'Transformational Change',
+          process_score: this.score.process_score,
+          outcome_score: this.score.outcome_score?.outcome_score,
+        },
+      ],
+      { skipHeader: true, origin: 'A' + length },
+    );
 
-    XLSX.utils.book_append_sheet(wb, ws, 'sheet1');
-
-    XLSX.writeFile(wb, book_name + '.xlsx');
+    return ws;
   }
 
-  _mapProcessData(){ 
-    let data = new ProcessData()
-    if (this.processData?.technology && this.processData?.technology?.length !== 0){
-      data.technology = this.processData.technology.map((ele: { characteristic: string; question: string; score: number; justification: string; }) => {
-        let _data = new ProcessTableData()
-        _data.Characteristic = ele.characteristic
-        _data.Question = ele.question
-        _data.Score = ele.score
-        _data.Justification = ele.justification
-        return _data
-      })
+  private appendOutcomeSection(
+    ws: XLSX.WorkSheet,
+    length: number,
+    title: string,
+    rows: Record<string, string>[] | undefined,
+  ): number {
+    if (!rows?.length) {
+      return length;
     }
+    XLSX.utils.sheet_add_json(ws, [{ title }], {
+      skipHeader: true,
+      origin: 'A' + length,
+    });
+    length = length + 2;
+    XLSX.utils.sheet_add_json(ws, rows, {
+      skipHeader: false,
+      origin: 'A' + length,
+    });
+    return length + rows.length + 2;
+  }
 
-    if (this.processData.incentives && this.processData.incentives.length !== 0){
-      data.incentives = this.processData.incentives.map((ele: { characteristic: string; question: string; score: number; justification: string; }) => {
-        let _data = new ProcessTableData()
-        _data.Characteristic = ele.characteristic
-        _data.Question = ele.question
-        _data.Score = ele.score
-        _data.Justification = ele.justification
-        return _data
-      })
-    }
-    if (this.processData.norms && this.processData.norms.length !== 0){
-      data.norms = this.processData.norms.map((ele: { characteristic: string; question: string; score: number; justification: string; }) => {
-        let _data = new ProcessTableData()
-        _data.Characteristic = ele.characteristic
-        _data.Question = ele.question
-        _data.Score = ele.score
-        _data.Justification = ele.justification
-        return _data
-      })
-    }
+  private buildOutcomeSummaryRows(): { Category: string; 'Aggregated score': string }[] {
+    const outcome = this.score.outcome_score;
+    return [
+      {
+        Category: 'Scale of outcome - GHGs',
+        'Aggregated score': this.formatAggregateScore(outcome?.scale_ghg_score),
+      },
+      {
+        Category: 'Scale of outcome - Sustainable development',
+        'Aggregated score': this.formatAggregateScore(outcome?.scale_sdg_score),
+      },
+      {
+        Category: 'Scale of outcome - Adaptation co-benefits',
+        'Aggregated score': this.formatAggregateScore(
+          outcome?.scale_adaptation_score,
+        ),
+      },
+      {
+        Category: 'Outcome sustained over time - GHGs',
+        'Aggregated score': this.formatAggregateScore(
+          outcome?.sustained_ghg_score,
+        ),
+      },
+      {
+        Category: 'Outcome sustained over time - Sustainable development',
+        'Aggregated score': this.formatAggregateScore(
+          outcome?.sustained_sdg_score,
+        ),
+      },
+      {
+        Category: 'Outcome sustained over time - Adaptation co-benefits',
+        'Aggregated score': this.formatAggregateScore(
+          outcome?.sustained_adaptation_score,
+        ),
+      },
+      {
+        Category: 'Sustainable development (combined scale & sustained)',
+        'Aggregated score': this.formatAggregateScore(outcome?.sdg_score),
+      },
+      {
+        Category: 'Outcomes score',
+        'Aggregated score': this.formatAggregateScore(outcome?.outcome_score),
+      },
+    ];
+  }
 
-    return data
+  private formatAggregateScore(score: number | null | undefined): string {
+    if (score === null || score === undefined) {
+      return 'N/A';
+    }
+    return score.toString();
+  }
+
+  private formatScoreForExport(
+    score: number | string | null | undefined,
+  ): string {
+    if (score === null || score === undefined || score === '') {
+      return '-';
+    }
+    return score.toString();
   }
 
   mapOutcomeData(){
@@ -344,11 +419,11 @@ export class CmResultComponent implements OnInit {
     if (this.outcomeData.scale_GHGs.length !== 0){
       data.scaleGHGs = this.outcomeData.scale_GHGs.map(ele => {
         let _data = new ScaleTableData()
-        _data.Characteristic = ele.characteristic
+        _data.Characteristic = this.changeOutcomeCharacteristicsName(ele.characteristic)
         _data['Starting Situation'] = ele.starting_situation
-        _data['Expected Impact'] = ele.expected_impacts
-        let score = this.getOutcomeScores(ele.outcome_score,'scale_GHGs', ele.characteristic)
-        _data.Score = score ? score.toString() : '-'
+        _data['Expected Impact'] = ele.expected_impact ?? ele.expected_impacts
+        const score = this.getOutcomeScores(ele.outcome_score,'scale_GHGs', ele.characteristic)
+        _data.Score = this.formatScoreForExport(score)
         _data.Justification = ele.justification
         return _data
       })
@@ -358,9 +433,9 @@ export class CmResultComponent implements OnInit {
         let _data = new ScaleTableData()
         _data.Characteristic = this.changeOutcomeCharacteristicsName(ele.characteristic)
         _data['Starting Situation'] = ele.starting_situation
-        _data['Expected Impact'] = ele.expected_impacts
-        let score = this.getOutcomeScores(ele.outcome_score,'sustained_GHGs', ele.characteristic)
-        _data.Score = score ? score.toString() : '-'
+        _data['Expected Impact'] = ele.expected_impact ?? ele.expected_impacts
+        const score = this.getOutcomeScores(ele.outcome_score,'sustained_GHGs', ele.characteristic)
+        _data.Score = this.formatScoreForExport(score)
         _data.Justification = ele.justification
         return _data
       })
@@ -368,12 +443,12 @@ export class CmResultComponent implements OnInit {
     if (this.outcomeData.scale_SDs.length !== 0){
       data.scaleSDs = this.outcomeData.scale_SDs.map(ele => {
         let _data = new ScaleTableData()
-        _data.SDG = this.getSDGName(ele.SDG)
-        _data.Characteristic = ele.characteristic
+        _data.SDG = ele.SDG ?? this.getSDGName(ele.SDG)
+        _data.Characteristic = this.changeOutcomeCharacteristicsName(ele.characteristic)
         _data['Starting Situation'] = ele.starting_situation
-        _data['Expected Impact'] = ele.expected_impacts
-        let score = this.getOutcomeScores(ele.outcome_score,'scale_SDs', ele.characteristic)
-        _data.Score = score ? score.toString() : '-'
+        _data['Expected Impact'] = ele.expected_impact ?? ele.expected_impacts
+        const score = this.getOutcomeScores(ele.outcome_score,'scale_SDs', ele.characteristic)
+        _data.Score = this.formatScoreForExport(score)
         _data.Justification = ele.justification
         return _data
       })
@@ -381,12 +456,37 @@ export class CmResultComponent implements OnInit {
     if (this.outcomeData.sustained_SDs.length !== 0){
       data.sustainedSDs = this.outcomeData.sustained_SDs.map(ele => {
         let _data = new ScaleTableData()
-        _data.SDG = this.getSDGName(ele.SDG)
+        _data.SDG = ele.SDG ?? this.getSDGName(ele.SDG)
         _data.Characteristic = this.changeOutcomeCharacteristicsName(ele.characteristic)
         _data['Starting Situation'] = ele.starting_situation
-        _data['Expected Impact'] = ele.expected_impacts
-        let score = this.getOutcomeScores(ele.outcome_score,'sustained_SDs', ele.characteristic)
-        _data.Score = score ? score.toString() : '-'
+        _data['Expected Impact'] = ele.expected_impact ?? ele.expected_impacts
+        const score = this.getOutcomeScores(ele.outcome_score,'sustained_SDs', ele.characteristic)
+        _data.Score = this.formatScoreForExport(score)
+        _data.Justification = ele.justification
+        return _data
+      })
+    }
+    if (this.outcomeData.scale_adaptation.length !== 0){
+      data.scaleAdaptation = this.outcomeData.scale_adaptation.map(ele => {
+        let _data = new ScaleTableData()
+        _data.Characteristic = this.changeOutcomeCharacteristicsName(ele.characteristic)
+        _data['Starting Situation'] = ele.starting_situation
+        _data['Expected Impact'] = ele.expected_impact ?? ele.expected_impacts
+        _data['Adaptation co-benefit'] = ele.adaptation
+        const score = this.getOutcomeScores(ele.outcome_score,'scale_adaptation', ele.characteristic)
+        _data.Score = this.formatScoreForExport(score)
+        _data.Justification = ele.justification
+        return _data
+      })
+    }
+    if (this.outcomeData.sustained_adaptation.length !== 0){
+      data.sustainedAdaptation = this.outcomeData.sustained_adaptation.map(ele => {
+        let _data = new ScaleTableData()
+        _data.Characteristic = this.changeOutcomeCharacteristicsName(ele.characteristic)
+        _data['Starting Situation'] = ele.starting_situation
+        _data['Expected Impact'] = ele.expected_impact ?? ele.expected_impacts
+        const score = this.getOutcomeScores(ele.outcome_score,'sustained_adaptation', ele.characteristic)
+        _data.Score = this.formatScoreForExport(score)
         _data.Justification = ele.justification
         return _data
       })
@@ -435,34 +535,42 @@ export class CmResultComponent implements OnInit {
   }
 
   getOutcomeScores(code: any, category: string, characteristic: Characteristics) {
-    if (code) {
-      if (code === '-99') {
-        return (this.scale_GHG_score_micro.find(o => o.code === code))?.name
-      } else {
-        if (category == 'scale_GHGs') {
-          if (characteristic.code === 'MACRO_LEVEL') {
-            return (this.scale_GHG_score_macro.find(o => o.code === code))?.value
-          } else if (characteristic.code === 'MEDIUM_LEVEL') {
-            return (this.scale_GHG_score_medium.find(o => o.code === code))?.value
-          } else {
-            return (this.scale_GHG_score_micro.find(o => o.code === code))?.value
-          }
+    if (code === null || code === undefined || code === '') {
+      return '-';
+    }
+
+    const codeStr = String(code);
+    if (codeStr === '-99') {
+      return 'Outside assessment boundaries';
+    }
+
+    const findScoreValue = (scores: ScoreDto[]) =>
+      scores.find((o) => o.code === codeStr)?.value;
+
+    const findScoreName = (scores: ScoreDto[]) =>
+      scores.find((o) => o.code === codeStr)?.name;
+
+    switch (category) {
+      case 'scale_GHGs':
+        if (characteristic?.code === 'MACRO_LEVEL') {
+          return findScoreValue(this.scale_GHG_score_macro);
         }
-        else if (category == 'sustained_GHGs') {
-          return (this.sustained_GHG_score.find(o => o.code === code))?.value
+        if (characteristic?.code === 'MEDIUM_LEVEL') {
+          return findScoreValue(this.scale_GHG_score_medium);
         }
-        else if (category == 'scale_SDs') {
-          return (this.scale_SD_score.find(o => o.code === code))?.value
-        }
-        else if (category == 'sustained_SDs') {
-          return (this.sustained_SD_score.find(o => o.code === code))?.value
-        }
-        else {
-          return '-'
-        }
-      }
-    } else {
-      return '-'
+        return findScoreValue(this.scale_GHG_score_micro);
+      case 'sustained_GHGs':
+        return findScoreValue(this.sustained_GHG_score);
+      case 'scale_SDs':
+        return findScoreValue(this.scale_SD_score);
+      case 'sustained_SDs':
+        return findScoreValue(this.sustained_SD_score);
+      case 'scale_adaptation':
+        return findScoreValue(this.adaptation_scale_score);
+      case 'sustained_adaptation':
+        return findScoreValue(this.adaptation_sustained_score);
+      default:
+        return findScoreName(this.scale_GHG_score_micro) ?? '-';
     }
   }
 
@@ -546,23 +654,13 @@ export class CmResultComponent implements OnInit {
   }
 }
 
-export class ProcessData{
-  technology: ProcessTableData[]
-  incentives: ProcessTableData[]
-  norms: ProcessTableData[]
-}
-
-export class ProcessTableData {
-  Characteristic: string
-  Question: string
-  Score: number
-  Justification: string
-}
 export class OutcomeData{
   scaleGHGs: any[]
   sustainedGHGs: any[]
   scaleSDs: any[]
   sustainedSDs: any[]
+  scaleAdaptation: any[]
+  sustainedAdaptation: any[]
 }
 
 export class SustainedTableData{
@@ -578,6 +676,7 @@ export class ScaleTableData{
   Characteristic: string
   'Starting Situation': string
   'Expected Impact': string
+  'Adaptation co-benefit': string
   Score: string
   Justification: string
 }

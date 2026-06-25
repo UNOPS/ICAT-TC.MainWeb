@@ -9,6 +9,7 @@ import * as XLSX from 'xlsx-js-style';
 import { MasterDataService } from 'app/shared/master-data.service';
 import { ColorMap } from 'app/Tool/carbon-market/cm-result/cm-result.component';
 import { HeatMapScore } from 'app/charts/heat-map/heat-map.component';
+import { scoresMatchMatrixCell } from 'app/shared/score-rounding.util';
 import { MessageService } from 'primeng/api';
 import { environment } from 'environments/environment';
 
@@ -229,7 +230,11 @@ export class AssessmentResultInvestorComponent implements OnInit {
   }
 
   getIntervention(x:number, y: number){
-    if (this.processScore === y && this.outcomeScore === x){
+    if (
+      this.processScore != null &&
+      this.outcomeScore != null &&
+      scoresMatchMatrixCell(this.processScore, this.outcomeScore, y, x)
+    ) {
       return true
     } else {
       return false

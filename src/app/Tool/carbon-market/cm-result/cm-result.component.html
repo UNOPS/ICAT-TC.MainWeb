@@ -648,10 +648,10 @@
                   <td *ngIf="isDownloading">{{ scale_ADs.expected_impact }}</td>
                   <td>
                     {{
-                      scale_ADs?.outcome_score
+                            scale_ADs?.outcome_score
                         ? getOutcomeScores(
                             scale_ADs?.outcome_score,
-                            'scale_SDs',
+                            'scale_adaptation',
                             scale_ADs.characteristic
                           )
                         : '-'
@@ -729,10 +729,10 @@
                   <td *ngIf="isDownloading">-</td>
                   <td>
                     {{
-                      sustained_ADs?.outcome_score
+                            sustained_ADs?.outcome_score
                         ? getOutcomeScores(
                             sustained_ADs?.outcome_score,
-                            'sustained_SDs',
+                            'sustained_adaptation',
                             sustained_ADs.characteristic
                           )
                         : '-'
