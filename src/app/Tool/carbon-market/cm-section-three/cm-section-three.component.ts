@@ -3,6 +3,7 @@ import { Component, EventEmitter, Input, OnInit, Output, QueryList, ViewChildren
 import { NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FieldNames, MasterDataService } from 'app/shared/master-data.service';
+import { floorToHalf } from 'app/shared/score-rounding.util';
 import { environment } from 'environments/environment';
 import * as moment from 'moment';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -693,7 +694,7 @@ isLogoutClicked: boolean = false;
           }
         }
       })
-      this.GHGScore = score === null ? 'N/A' : Math.round(score / valid_scores)
+      this.GHGScore = score === null ? 'N/A' : floorToHalf(score / valid_scores)
     } else if (['SUSTAINED_SD', 'SCALE_SD'].includes(char.characteristic.category.code)) {
       let score: number | null = null
       let valid_scores_sdg = 0
@@ -721,7 +722,7 @@ isLogoutClicked: boolean = false;
           })
         }
       })
-      this.SDGScore = score === null ? 'N/A' : Math.round(score / valid_scores_sdg)
+      this.SDGScore = score === null ? 'N/A' : floorToHalf(score / valid_scores_sdg)
       
     } else if (['SUSTAINED_ADAPTATION', 'SCALE_ADAPTATION'].includes(char.characteristic.category.code)) {
       let score: number | null = null
@@ -741,7 +742,7 @@ isLogoutClicked: boolean = false;
           }
         }
       })
-      this.adaptationScore = score === null ? 'N/A' : Math.round(score / valid_scores_ad);
+      this.adaptationScore = score === null ? 'N/A' : floorToHalf(score / valid_scores_ad);
     }
   }
 

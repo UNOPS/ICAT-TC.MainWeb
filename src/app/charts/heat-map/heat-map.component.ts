@@ -1,6 +1,7 @@
 import { Platform } from '@angular/cdk/platform';
 import { Component, Input, ViewChild } from '@angular/core';
 import { OverlayPanel } from 'primeng/overlaypanel';
+import { scoresMatchMatrixCell } from 'app/shared/score-rounding.util';
 
 @Component({
   selector: 'app-heat-map',
@@ -60,14 +61,18 @@ export class HeatMapComponent {
   }
 
   getIntervention(x: number, y: number) {
-    let a = this.score?.filter(item => item.processScore === y && item.outcomeScore === x).length
-   
-    return a 
+    let a = this.score?.filter((item) =>
+      scoresMatchMatrixCell(item.processScore, item.outcomeScore, y, x),
+    ).length;
+
+    return a;
   }
 
   enterHeatMapPoint(x: number, y: number, event: any) {
-    if (this.tableData){
-      this.pointTableDatas = this.tableData.filter(item => item.outcomeScore === x && item.processScore === y)
+    if (this.tableData) {
+      this.pointTableDatas = this.tableData.filter((item) =>
+        scoresMatchMatrixCell(item.processScore, item.outcomeScore, y, x),
+      );
       if (this.pointTableDatas.length > 0) {
         this.op.show(event);
       }
