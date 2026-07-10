@@ -3,6 +3,8 @@
     width: 125px;
     height: 70px;
     user-select: none;
+    /* Anchor for precise (half-step) dot placement; inert for centered dots. */
+    position: relative;
 }
 
 .intervention {

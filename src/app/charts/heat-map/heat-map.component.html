@@ -18,6 +18,7 @@
                     <td class="charttd" [style.background-color]="getBackgroundColor(x.value, y.value)" [style.color]="getIntervention(x.value, y.value)?'#404040':getBackgroundColor(x.value, y.value)">
                         <span (mouseenter)="enterHeatMapPoint(x.value, y.value,$event);"
                             (mouseleave)="leaveHeatMapPoint();op.hide()"
+                            [ngStyle]="getDotStyle(x.value, y.value)"
                             [ngClass]="getIntervention(x.value, y.value)==1? 'intervention':(getIntervention(x.value, y.value)>1? 'intervention-large':'')">1</span>
                     </td>
                 </ng-container>

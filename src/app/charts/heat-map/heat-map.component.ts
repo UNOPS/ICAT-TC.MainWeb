@@ -1,7 +1,7 @@
 import { Platform } from '@angular/cdk/platform';
 import { Component, Input, ViewChild } from '@angular/core';
 import { OverlayPanel } from 'primeng/overlaypanel';
-import { scoresMatchMatrixCell } from 'app/shared/score-rounding.util';
+import { floorToHalf, scoresMatchMatrixCell } from 'app/shared/score-rounding.util';
 
 @Component({
   selector: 'app-heat-map',
@@ -15,6 +15,13 @@ export class HeatMapComponent {
   @Input() score: HeatMapScore[]
   @Input() showOp?: boolean
   @Input() tableData?: TableData[]
+  /**
+   * When true, the dot is placed at half-step (0.5) resolution: a score whose
+   * half-step remainder is .5 (e.g. 2.5) is drawn on the gridline between boxes
+   * instead of centered in the box. Intended for single-assessment views where
+   * each cell holds at most one point. Dashboards leave this off (centered dots).
+   */
+  @Input() preciseDotPosition: boolean = false
 
   @ViewChild('op') op: OverlayPanel;
   pointTableDatas: TableData[];
@@ -66,6 +73,50 @@ export class HeatMapComponent {
     ).length;
 
     return a;
+  }
+
+  /**
+   * Positions the dot within its matrix cell. In precise mode a score sitting on
+   * a half-step (e.g. 2.5) is nudged half a cell toward the next-higher value so
+   * it lands on the gridline between boxes; a whole-number score stays centered.
+   * Returns an empty object (no override) when precise mode is off, so the
+   * existing centered rendering used by the dashboards is unchanged.
+   */
+  getDotStyle(x: number, y: number): { [key: string]: string } {
+    if (!this.preciseDotPosition || !this.score) {
+      return {};
+    }
+
+    const match = this.score.find((item) =>
+      scoresMatchMatrixCell(item.processScore, item.outcomeScore, y, x),
+    );
+    if (!match) {
+      return {};
+    }
+
+    const outcomeRemainder =
+      floorToHalf(match.outcomeScore) - Math.floor(match.outcomeScore);
+    const processRemainder =
+      floorToHalf(match.processScore) - Math.floor(match.processScore);
+
+    // Higher axis values are drawn first (top/left), so a .5 remainder shifts the
+    // dot toward the top/left gridline. left/top are percentages of the cell.
+    const left =
+      outcomeRemainder === 0.5 ? (this.isDescending(this.xData) ? '0%' : '100%') : '50%';
+    const top =
+      processRemainder === 0.5 ? (this.isDescending(this.yData) ? '0%' : '100%') : '50%';
+
+    return {
+      position: 'absolute',
+      left,
+      top,
+      transform: 'translate(-50%, -50%)',
+      margin: '0',
+    };
+  }
+
+  private isDescending(data?: { value: number }[]): boolean {
+    return !!data && data.length > 1 && data[0].value > data[data.length - 1].value;
   }
 
   enterHeatMapPoint(x: number, y: number, event: any) {

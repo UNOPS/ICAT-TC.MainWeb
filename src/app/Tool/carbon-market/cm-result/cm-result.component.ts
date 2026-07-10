@@ -266,6 +266,8 @@ export class CmResultComponent implements OnInit {
     );
     length = length + 2;
 
+    length = this.appendProcessSection(ws, length);
+
     const outcomeData = this.mapOutcomeData();
     length = this.appendOutcomeSection(
       ws,
@@ -350,6 +352,126 @@ export class CmResultComponent implements OnInit {
       origin: 'A' + length,
     });
     return length + rows.length + 2;
+  }
+
+  private appendProcessSection(ws: XLSX.WorkSheet, length: number): number {
+    const categories = this.processData?.data ?? [];
+    if (!categories.length) {
+      return length;
+    }
+
+    XLSX.utils.sheet_add_json(ws, [{ title: 'Process of change' }], {
+      skipHeader: true,
+      origin: 'A' + length,
+    });
+    length = length + 2;
+
+    const rows = this.buildProcessRows();
+    XLSX.utils.sheet_add_aoa(ws, rows, { origin: 'A' + length });
+    length = length + rows.length + 2;
+
+    XLSX.utils.sheet_add_json(
+      ws,
+      [
+        {
+          title: 'Category score - Process of change',
+          score: this.formatScoreForExport(this.score?.process_score),
+        },
+      ],
+      { skipHeader: true, origin: 'A' + length },
+    );
+    return length + 2;
+  }
+
+  private buildProcessRows(): (string | number)[][] {
+    const categories = this.processData?.data ?? [];
+    const guidingQuestions = this.processData?.guidingQuestions ?? [];
+
+    const categoryHeader: (string | number)[] = [''];
+    const characteristicHeader: (string | number)[] = ['Relevance'];
+    const relevanceRow: (string | number)[] = [''];
+    const subHeader: (string | number)[] = ['Score'];
+
+    // Each characteristic occupies three columns: Guiding question / Weight / Score.
+    categories.forEach((cat: any) => {
+      (cat.characteristic ?? []).forEach((ch: any, idx: number) => {
+        categoryHeader.push(idx === 0 ? cat.name : '', '', '');
+        characteristicHeader.push(ch.name, '', '');
+        relevanceRow.push(this.getRelevance(ch.relevance) ?? '-', '', '');
+        subHeader.push('Guiding question', 'Weight', 'Score');
+      });
+    });
+
+    const rows: (string | number)[][] = [
+      categoryHeader,
+      characteristicHeader,
+      relevanceRow,
+      subHeader,
+    ];
+
+    guidingQuestions.forEach((question: any) => {
+      const row: (string | number)[] = [''];
+      categories.forEach((cat: any) => {
+        (cat.characteristic ?? []).forEach((ch: any) => {
+          row.push(
+            this.formatProcessCell(question[ch.name + ' question']),
+            this.formatProcessWeight(question[ch.name + ' weight']),
+            this.formatProcessCell(question[ch.name + ' score']),
+          );
+        });
+      });
+      rows.push(row);
+    });
+
+    const characteristicScoreRow: (string | number)[] = [''];
+    categories.forEach((cat: any) => {
+      (cat.characteristic ?? []).forEach((ch: any) => {
+        const chScore =
+          ch.ch_score === null || ch.ch_score === undefined
+            ? 'N/A'
+            : ch.ch_score;
+        characteristicScoreRow.push(
+          ch.name + ' score: ' + chScore,
+          'Weight: ' + ch.weight + '%',
+          '',
+        );
+      });
+    });
+    rows.push(characteristicScoreRow);
+
+    const categoryScoreRow: (string | number)[] = [''];
+    categories.forEach((cat: any) => {
+      const catScore =
+        cat.cat_score === null || cat.cat_score === undefined
+          ? 'N/A'
+          : cat.cat_score;
+      (cat.characteristic ?? []).forEach((ch: any, idx: number) => {
+        categoryScoreRow.push(
+          idx === 0 ? cat.name + ' score: ' + catScore : '',
+          idx === 0 ? 'Weight: ' + cat.weight + '%' : '',
+          '',
+        );
+      });
+    });
+    rows.push(categoryScoreRow);
+
+    return rows;
+  }
+
+  private formatProcessCell(value: string | number | null | undefined): string {
+    if (value === null || value === undefined || value === '') {
+      return '-';
+    }
+    return value.toString();
+  }
+
+  private formatProcessWeight(
+    value: string | number | null | undefined,
+  ): string {
+    if (value === null || value === undefined || value === '' || value === '-') {
+      return '-';
+    }
+    return value + '%';
   }
 
   private buildOutcomeSummaryRows(): { Category: string; 'Aggregated score': string }[] {
