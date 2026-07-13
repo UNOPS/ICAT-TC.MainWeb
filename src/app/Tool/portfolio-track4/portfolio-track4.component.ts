@@ -3,7 +3,7 @@ import { NgForm } from '@angular/forms';
 import { FieldNames, MasterDataDto, MasterDataService, assessment_geoArea_tooltip, assessment_period_info, assessment_sector_tooltip, chapter6_url } from 'app/shared/master-data.service';
 import * as moment from 'moment';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { AllBarriersSelected, Assessment, AssessmentControllerServiceProxy, BarrierSelected, Characteristics, ClimateAction, CreateInvestorToolDto, FinalInvestorAssessmentDto, GeographicalAreasCoveredDto, ImpactCovered, IndicatorDetails, InstitutionControllerServiceProxy, InvestorAssessment, InvestorTool, InvestorToolControllerServiceProxy, MethodologyAssessmentControllerServiceProxy, PolicyBarriers, PortfolioQuestionDetails, PortfolioQuestions,  Sector, SectorControllerServiceProxy } from 'shared/service-proxies/service-proxies';
+import { AllBarriersSelected, Assessment, AssessmentControllerServiceProxy, BarrierSelected, Characteristics, ClimateAction, CreateInvestorToolDto, FinalInvestorAssessmentDto, GeographicalAreasCoveredDto, ImpactCovered, IndicatorDetails, InstitutionControllerServiceProxy, InvestorAssessment, InvestorTool, InvestorToolControllerServiceProxy, MethodologyAssessmentControllerServiceProxy, PolicyBarriers, PortfolioQuestionDetails, PortfolioQuestions, Sector, SectorControllerServiceProxy } from 'shared/service-proxies/service-proxies';
 import decode from 'jwt-decode';
 import { TabView } from 'primeng/tabview';
 import { environment } from 'environments/environment';
@@ -45,7 +45,7 @@ interface ChaCategoryTotalEqualsTo1 {
 export class PortfolioTrack4Component implements OnInit, OnDestroy {
 
   @ViewChild('multiSelectComponent') multiSelectComponent: MultiSelect;
-  geographicalArea:MasterDataDto = new MasterDataDto()
+  geographicalArea: MasterDataDto = new MasterDataDto()
   assessment: Assessment = new Assessment();
   investorAssessment: InvestorTool = new InvestorTool();
   sectorArray: Sector[] = [];
@@ -120,10 +120,11 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
   characteristicsLoaded: boolean = false;
   categoriesLoaded: boolean = false;
   geographicalAreasCoveredArr: any[] = []
-  
+
   barrierBox: boolean = false;
   barrierSelected: BarrierSelected = new BarrierSelected();
   finalBarrierList: BarrierSelected[] = [];
+  editingBarrierIndex: number = -1;
   barrierArray: PolicyBarriers[];
   isDownloading: boolean = true;
   isDownloadMode: number = 0;
@@ -143,20 +144,20 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
   fieldNames = FieldNames
   minDateTo: Date;
 
-  tabIsValid: {[key: number]: boolean}= {}
-  tab1IsValid: {[key: number]: boolean}= {}
-  maintabIsValid: {[key: number]: boolean}= {}
+  tabIsValid: { [key: number]: boolean } = {}
+  tab1IsValid: { [key: number]: boolean } = {}
+  maintabIsValid: { [key: number]: boolean } = {}
   isFirstLoading0: boolean = true;
   isFirstLoading1: boolean = true;
   notFilledCategories: any[] = []
   chapter6_url = chapter6_url
-  from_date:Date
+  from_date: Date
   to_date: Date
   isCompleted: boolean = false;
   assessment_period_info = assessment_period_info
   isContinue: boolean = false;
   isDisableIntervention: boolean = false;
-  completModeSectorList: Sector[]=[];
+  completModeSectorList: Sector[] = [];
   selectedSectorsCompleteMode: Sector[] = [];
   isCreatingAssessment: boolean = false
   lastUpdatedCategory: any
@@ -190,8 +191,8 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     private appService: AppService
 
   ) {
-    this.uploadUrl = environment.baseUrlAPI + "/document/upload-file-by-name" ;
-    this.fileServerURL = environment.baseUrlAPI+'/document/downloadDocumentsFromFileName/uploads';
+    this.uploadUrl = environment.baseUrlAPI + "/document/upload-file-by-name";
+    this.fileServerURL = environment.baseUrlAPI + '/document/downloadDocumentsFromFileName/uploads';
 
   }
 
@@ -213,7 +214,7 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
   assessmentId: number;
   isEditMode: boolean = false;
   phaseTransformExapmle: any[] = []
-  
+
   async ngOnInit(): Promise<void> {
     this.phaseTransformExapmle = this.masterDataService.phase_transfrom
     this.levelOfImplementation = this.masterDataService.level_of_implemetation;
@@ -227,12 +228,12 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
       params['isEdit'] == 'true' ? (this.isEditMode = true) : false;
       params['iscompleted'] == 'true' ? (this.isCompleted = true) : false
       params['isContinue'] == 'true' ? (this.isContinue = true) : false
-      params['isFirst'] == 'true' ? (this.isFirst = true): (this.isFirst= false)
-      if(params['interventionId'] && params['assessmentType']){
-        await this.getPolicies().then( x=>
-          this.setDataFromFlow(params['interventionId'],params['assessmentType'])
+      params['isFirst'] == 'true' ? (this.isFirst = true) : (this.isFirst = false)
+      if (params['interventionId'] && params['assessmentType']) {
+        await this.getPolicies().then(x =>
+          this.setDataFromFlow(params['interventionId'], params['assessmentType'])
         )
-        
+
       }
       this.assessmentId = params['id']
       if (!this.assessmentId && this.isEditMode) {
@@ -248,13 +249,13 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     }
     else {
       try {
-        
+
         await this.getSavedAssessment()
-        .then(x => {
-          if (!this.isCompleted) {
-            this.startAutoSave()
-          }
-        })
+          .then(x => {
+            if (!this.isCompleted) {
+              this.startAutoSave()
+            }
+          })
       }
       catch (error) {
       }
@@ -313,13 +314,13 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
       this.sdgList = res
     });
     this.isFirstLoading0 = false
-    if (this.activeIndexMain === 0 ) {
+    if (this.activeIndexMain === 0) {
       this.lastUpdatedCategory = this.processData[this.activeIndex]
     } else {
       this.lastUpdatedCategory = this.outcomeData[this.activeIndex2]
     }
 
-   
+
   }
 
   async getSetors() {
@@ -357,19 +358,19 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (!this.isCompleted && (this.isSavedAssessment || this.isContinue || this.isEditMode) && !this.isFirst) {
-      if (this.activeIndexMain === 0 ) {
+      if (this.activeIndexMain === 0) {
         this.lastUpdatedCategory = this.processData[this.activeIndex]
       } else {
         this.lastUpdatedCategory = this.outcomeData[this.activeIndex2]
       }
       if (this.isEditMode) {
-        if (!this.isSavingDraft) {this.saveDraft(this.lastUpdatedCategory,this.lastUpdatedCategory.CategoryName,this.lastUpdatedCategory.type === 'process' ? 'pro' : 'out', true, true)}
+        if (!this.isSavingDraft) { this.saveDraft(this.lastUpdatedCategory, this.lastUpdatedCategory.CategoryName, this.lastUpdatedCategory.type === 'process' ? 'pro' : 'out', true, true) }
       } else {
         if (!this.savedInInterval) {
-          if (!this.isSavingDraft) {this.saveDraft(this.lastUpdatedCategory,this.lastUpdatedCategory.CategoryName,this.lastUpdatedCategory.type === 'process' ? 'pro' : 'out', true, true)}
+          if (!this.isSavingDraft) { this.saveDraft(this.lastUpdatedCategory, this.lastUpdatedCategory.CategoryName, this.lastUpdatedCategory.type === 'process' ? 'pro' : 'out', true, true) }
         }
       }
-    }else{
+    } else {
       this.isFirst = false
     }
     this.stopAutoSave()
@@ -377,13 +378,13 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
 
   startAutoSave() {
     this.autoSaveTimer = setInterval(() => {
-      if (this.activeIndexMain === 0 ) {
+      if (this.activeIndexMain === 0) {
         this.lastUpdatedCategory = this.processData[this.activeIndex]
       } else {
         this.lastUpdatedCategory = this.outcomeData[this.activeIndex2]
       }
       this.savedInInterval = true
-      if (!this.isSavingDraft)  {this.saveDraft(this.lastUpdatedCategory,this.lastUpdatedCategory.CategoryName,this.lastUpdatedCategory.type === 'process' ? 'pro' : 'out', false, true)}
+      if (!this.isSavingDraft) { this.saveDraft(this.lastUpdatedCategory, this.lastUpdatedCategory.CategoryName, this.lastUpdatedCategory.type === 'process' ? 'pro' : 'out', false, true) }
     }, 50000);
   }
 
@@ -391,20 +392,20 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     clearInterval(this.autoSaveTimer);
   }
 
-  setDataFromFlow(interventonId:string, assessmentType:string) {
+  setDataFromFlow(interventonId: string, assessmentType: string) {
     this.isDisableIntervention = true
-    this.assessment.climateAction = this.policies.find((i)=>i.id==Number(interventonId))! 
+    this.assessment.climateAction = this.policies.find((i) => i.id == Number(interventonId))!
     this.assessment.assessmentType = assessmentType;
-    let event:any = {}
+    let event: any = {}
     event.value = this.assessment.climateAction
     this.onSelectIntervention(event)
   }
 
-  watchVideo(){
+  watchVideo() {
     let ref = this.dialogService.open(GuidanceVideoComponent, {
       header: 'Guidance Video',
       width: '60%',
-      contentStyle: {"overflow": "auto"},
+      contentStyle: { "overflow": "auto" },
       baseZIndex: 10000,
       data: {
         sourceName: 'General',
@@ -412,10 +413,10 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     });
 
     ref.onClose.subscribe(() => {
-      
+
     })
   }
-  
+
   async getSavedAssessment() {
     this.processData = []
     this.outcomeData = []
@@ -435,12 +436,12 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
       this.assessment.climateAction.dateOfImplementation.month(),
       this.assessment.climateAction.dateOfImplementation.date(),
     )
-    this.from_date= new Date(
+    this.from_date = new Date(
       this.assessment.from?.year(),
       this.assessment.from?.month(),
       this.assessment.from?.date()
     );
-    this.to_date= new Date(
+    this.to_date = new Date(
       this.assessment.to?.year(),
       this.assessment.to?.month(),
       this.assessment.to?.date()
@@ -461,10 +462,10 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     }
     this.assessment = await this.assessmentControllerServiceProxy.findOne(this.assessmentId).toPromise();
     this.policies.push(this.assessment.climateAction)
-    this.finalBarrierList = this.assessment['policy_barrier'].map((i: { is_affected: boolean; characteristics: Characteristics[]; explanation: string; barrier: string; })=> {
-      let p =  new BarrierSelected()
+    this.finalBarrierList = this.assessment['policy_barrier'].map((i: { is_affected: boolean; characteristics: Characteristics[]; explanation: string; barrier: string; }) => {
+      let p = new BarrierSelected()
       p.affectedbyIntervention = i.is_affected
-      p.characteristics = i.characteristics.map( char =>{
+      p.characteristics = i.characteristics.map(char => {
         let characteristic = new Characteristics()
         characteristic.id = char.id
         characteristic.name = char.name
@@ -473,8 +474,8 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
       p.explanation = i.explanation
       p.barrier = i.barrier
       return p
-      
-     });
+
+    });
     let areas: MasterDataDto[] = []
     this.assessment['geographicalAreasCovered'].map((area: { code: any; }) => {
       let level = this.levelOfImplementation.find(o => o.code === area.code)
@@ -484,15 +485,15 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     })
     this.geographicalAreasCoveredArr = areas
     this.geographicalArea = this.geographicalAreasCoveredArr[0]
-     this.completModeSectorList = this.assessment.climateAction.policySector.map(i=> i.sector)
-     this.sectorList = this.completModeSectorList
+    this.completModeSectorList = this.assessment.climateAction.policySector.map(i => i.sector)
+    this.sectorList = this.completModeSectorList
     this.assessment['sector'].map((sector: Sector) => {
-      let _sector = this.sectorList.find(i =>i.id ==sector.id)
-      if(_sector){
+      let _sector = this.sectorList.find(i => i.id == sector.id)
+      if (_sector) {
         this.sectorArray.push(_sector)
       }
     })
-    this.selectedSectorsCompleteMode =  this.sectorArray
+    this.selectedSectorsCompleteMode = this.sectorArray
     this.processData = await this.investorToolControllerproxy.getProcessData(this.assessmentId).toPromise();
     this.setFrom()
     this.setTo()
@@ -668,7 +669,7 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
         this.tabLoading = true;
       }
     });
-    if (this.activeIndexMain === 0 ) {
+    if (this.activeIndexMain === 0) {
       this.lastUpdatedCategory = this.processData[this.activeIndex]
     } else {
       this.lastUpdatedCategory = this.outcomeData[this.activeIndex2]
@@ -684,7 +685,7 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     this.assessment.year = moment(new Date()).format("DD/MM/YYYY")
     if (!this.assessment.id) this.assessment.createdOn = moment(new Date())
     this.assessment.editedOn = moment(new Date())
-    if(this.isCompleted || !this.isContinue){
+    if (this.isCompleted || !this.isContinue) {
       form.controls['sectors'].setValue(this.sectorArray)
     }
     if (form.valid) {
@@ -702,14 +703,14 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
             allBarriersSelected.assessment = res;
 
             this.projectControllerServiceProxy.policyBar(allBarriersSelected).subscribe((res) => {
-              let status = this.isCompleted? 'updated': 'created'
+              let status = this.isCompleted ? 'updated' : 'created'
               this.messageService.add({
                 severity: 'success',
                 summary: 'Success',
                 detail: `Assessment has been ${status} successfully`,
                 closable: true,
               },
-              
+
               );
               if (!this.isCompleted) {
                 setTimeout(() => {
@@ -745,12 +746,12 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
             this.investorToolControllerproxy.createinvestorToolAssessment(this.createInvestorToolDto)
               .subscribe(_res => {
                 if (_res) {
-                  if(!this.isCompleted){
+                  if (!this.isCompleted) {
                     this.isSavedAssessment = true;
                     this.autoFillInternational();
                     this.isCompleted ? this.isCreatingAssessment = false : this.isCreatingAssessment = true;
                   }
-                 
+
                 }
               }, error => {
                 this.messageService.add({
@@ -780,9 +781,32 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
 
   }
   pushBarriers(barrier: any) {
-    this.finalBarrierList.push(barrier)
+    if (this.editingBarrierIndex > -1) {
+      this.finalBarrierList[this.editingBarrierIndex] = barrier
+      this.editingBarrierIndex = -1
+    } else {
+      this.finalBarrierList.push(barrier)
+    }
     this.barrierSelected = new BarrierSelected()
+  }
 
+  editBarrier(index: number) {
+    const existing = this.finalBarrierList[index]
+    const copy = new BarrierSelected()
+    copy.barrier = existing.barrier
+    copy.explanation = existing.explanation
+    copy.affectedbyIntervention = existing.affectedbyIntervention
+
+    copy.characteristics = (existing.characteristics || []).map(
+      (c: any) => (this.barrierChList || []).find((o: any) => o.id === c.id) || c,
+    )
+    this.barrierSelected = copy
+    this.editingBarrierIndex = index
+    this.barrierBox = true
+  }
+
+  deleteBarrier(index: number) {
+    this.finalBarrierList.splice(index, 1)
   }
   barriersNameArray(Characteristics: any[]) {
     if (Characteristics?.length > 0) {
@@ -800,6 +824,8 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
 
   }
   showDialog() {
+    this.editingBarrierIndex = -1;
+    this.barrierSelected = new BarrierSelected();
     this.barrierBox = true;
   }
   selectedTrack: any
@@ -821,18 +847,18 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
   onItemSelectImpacts(event: any) {
   }
 
-  
+
 
   onMainTabChange(event: any) {
     this.mainTabIndex = event.index;
-    for (let i = 0; i<2; i++) {
+    for (let i = 0; i < 2; i++) {
       if (i == 0) {
         if (!this.isFirstLoading0) {
           this.checkTab1Mandatory(4)
-  
+
           this.maintabIsValid[i] = true
           for (let k of Object.keys(this.tab1IsValid)) {
-            if (!this.tab1IsValid[parseInt(k)]){
+            if (!this.tab1IsValid[parseInt(k)]) {
               this.maintabIsValid[i] = false
               break
             }
@@ -843,7 +869,7 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
           this.checkTab2Mandatory(6)
           this.maintabIsValid[i] = true
           for (let k of Object.keys(this.tabIsValid)) {
-            if (!this.tabIsValid[parseInt(k)]){
+            if (!this.tabIsValid[parseInt(k)]) {
               this.maintabIsValid[i] = false
               break
             }
@@ -887,7 +913,7 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
       this.isRelavanceDisabled = false;
       this.initialRelevance = 1
     }
-    if (type === 'process'){
+    if (type === 'process') {
       this.checkTab1Mandatory(event.index)
       this.lastUpdatedCategory = this.processData[this.activeIndex]
     } else {
@@ -912,9 +938,9 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
 
   checkTab2Mandatory(idx: number) {
     for (const [index, category] of this.outcomeData.entries()) {
-      if ((category.CategoryName ==='Adaptation Time frame over which the outcome is sustained' && index <= idx) || index < idx) {
+      if ((category.CategoryName === 'Adaptation Time frame over which the outcome is sustained' && index <= idx) || index < idx) {
         let validation = false
-        if(category.CategoryName === 'SDG Scale of the Outcome') {
+        if (category.CategoryName === 'SDG Scale of the Outcome') {
           validation = this.sdgValidation(this.sdgDataSendArray2)
         } else if (category.CategoryName === 'SDG Time frame over which the outcome is sustained') {
           validation = this.sdgValidation(this.sdgDataSendArray4)
@@ -935,7 +961,7 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
   }
 
 
-  async saveDraft(category: any, processDraftLocation: string, type: string,isAutoSaving: boolean = false, isDefault?: boolean) {
+  async saveDraft(category: any, processDraftLocation: string, type: string, isAutoSaving: boolean = false, isDefault?: boolean) {
     this.isSavingDraft = true
 
     let finalArray = this.processData.concat(this.outcomeData)
@@ -1018,19 +1044,19 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
           this.appService.autoSavingDone.next(true)
           this.appService.loginOut.next(false)
         }
-        
+
       })
   }
 
   saveResultInAutoSave(data: FinalInvestorAssessmentDto) {
     this.investorToolControllerproxy.createFinalAssessment2(data).subscribe(res => {
-     
-        if (!this.isEditMode) {
-          this.router.navigate(['app/general-tool-edit'], {
-            queryParams: { id: this.mainAssessment.id, isEdit: true },
-          });
-        }
-      
+
+      if (!this.isEditMode) {
+        this.router.navigate(['app/general-tool-edit'], {
+          queryParams: { id: this.mainAssessment.id, isEdit: true },
+        });
+      }
+
     })
   }
 
@@ -1049,7 +1075,7 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     return true;
   }
 
-  checkMandatory(){
+  checkMandatory() {
     for (let item of this.processData) {
       for (let item2 of item.data) {
         if ((item2.likelihood == null || item2.relavance == null) && item2.relavance != 0) {
@@ -1115,10 +1141,10 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     return true
   }
 
-  async onsubmit(form: NgForm, updateData?: {category?: any, type: string}) {
+  async onsubmit(form: NgForm, updateData?: { category?: any, type: string }) {
 
     if (this.assessment.assessment_approach === 'Direct') {
-      if(this.isCompleted){
+      if (this.isCompleted) {
         this.confirmationService.confirm({
           message: `Are you sure want to update`,
           header: 'Confirmation',
@@ -1136,7 +1162,7 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
                   detail: 'Fill all mandatory fields in scale sdg',
                   closable: true,
                 })
-                return 
+                return
               }
               this.confirmationService.confirm({
                 message: 'Pls make sure to update "Time frame outcome is sustained section" to update the result.',
@@ -1149,28 +1175,28 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
               })
             } else {
               if (!this.checkMandatory()) {
-                return 
+                return
               } else {
                 this.saveResults()
               }
             }
           },
           reject: () => {
-  
+
           },
         });
-      }else{
-        if (! this.checkMandatory()) {
+      } else {
+        if (!this.checkMandatory()) {
           return
         } else {
           this.saveResults()
         }
       }
-      
+
 
     }
     else {
-      if (! this.checkMandatory()){
+      if (!this.checkMandatory()) {
         return
       } else {
         let finalArray = this.processData.concat(this.outcomeData)
@@ -1178,15 +1204,15 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
         //@ts-ignore - We are accepting Array in back-end
         this.investorToolControllerproxy.createFinalAssessmentIndirect(finalArray)
           .subscribe(_res => {
-            let task = this.isCompleted? 'updated' :'created'
-                this.messageService.add({
-                  severity: 'success',
-                  summary: 'Success',
-                  detail: `Assessment has been ${task} successfully`,
-                  closable: true,
+            let task = this.isCompleted ? 'updated' : 'created'
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: `Assessment has been ${task} successfully`,
+              closable: true,
             })
             this.showResults();
-  
+
           }, error => {
             this.messageService.add({
               severity: 'error',
@@ -1272,17 +1298,17 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     }
   }
 
-  checkValidation(data: any[], type: string){
+  checkValidation(data: any[], type: string) {
     let isValid: boolean = false
     for (let investorAssessment of data) {
-      if (type === 'process' ) {
+      if (type === 'process') {
         if (investorAssessment.relavance === 0) {
           isValid = true;
         } else {
           if (
             (investorAssessment.relavance !== undefined && investorAssessment.relavance !== null) &&
             (investorAssessment.likelihood !== undefined && investorAssessment.likelihood !== null) &&
-            (investorAssessment.likelihood_justification !== undefined && investorAssessment.likelihood_justification !== null && investorAssessment.likelihood_justification !== '') 
+            (investorAssessment.likelihood_justification !== undefined && investorAssessment.likelihood_justification !== null && investorAssessment.likelihood_justification !== '')
           ) {
             isValid = true
           } else {
@@ -1374,7 +1400,7 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
         this.checkTab1Mandatory(this.activeIndex)
 
       }
-      if (this.activeIndexMain === 0 ) {
+      if (this.activeIndexMain === 0) {
         this.lastUpdatedCategory = this.processData[this.activeIndex]
       } else {
         this.lastUpdatedCategory = this.outcomeData[this.activeIndex2]
@@ -1586,19 +1612,19 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
       this.onSelectFromDate(this.from_date);
     }
 
-    this.geographicalArea = this.geographicalAreasCovered.find(item=>{
-      if (item.name==this.assessment.climateAction.geographicalAreaCovered){
+    this.geographicalArea = this.geographicalAreasCovered.find(item => {
+      if (item.name == this.assessment.climateAction.geographicalAreaCovered) {
         return item
       }
     })
-    this.sectorList = this.assessment.climateAction.policySector.map(i=> i.sector)
+    this.sectorList = this.assessment.climateAction.policySector.map(i => i.sector)
     this.sectorArray = this.sectorList
   }
 
-  onChangeGeoAreaCovered(){
-    if(this.assessment.climateAction.geographicalAreaCovered && this.geographicalArea.name !==this.assessment.climateAction.geographicalAreaCovered ){
+  onChangeGeoAreaCovered() {
+    if (this.assessment.climateAction.geographicalAreaCovered && this.geographicalArea.name !== this.assessment.climateAction.geographicalAreaCovered) {
       this.confirmationService.confirm({
-        message: `You selected a geographical scope that deviates from the one that was assigned to this intervention- ${this.assessment.climateAction.geographicalAreaCovered }. Are you sure you want to continue with this selection?`,
+        message: `You selected a geographical scope that deviates from the one that was assigned to this intervention- ${this.assessment.climateAction.geographicalAreaCovered}. Are you sure you want to continue with this selection?`,
         header: 'Confirmation',
         acceptIcon: 'icon-not-visible',
         rejectIcon: 'icon-not-visible',
@@ -1607,17 +1633,17 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
         key: 'geoConfirm',
         accept: () => {
         },
-        reject: () => { 
-          if(this.isCompleted){
-            this.geographicalArea = this.geographicalAreasCovered.find(item=>{
-              if (item.name==this.assessment['geographicalAreasCovered'][0].name){
+        reject: () => {
+          if (this.isCompleted) {
+            this.geographicalArea = this.geographicalAreasCovered.find(item => {
+              if (item.name == this.assessment['geographicalAreasCovered'][0].name) {
                 return item
               }
             })
           }
-          else{
-            this.geographicalArea = this.geographicalAreasCovered.find(item=>{
-              if (item.name==this.assessment.climateAction.geographicalAreaCovered){
+          else {
+            this.geographicalArea = this.geographicalAreasCovered.find(item => {
+              if (item.name == this.assessment.climateAction.geographicalAreaCovered) {
                 return item
               }
             })
@@ -1628,11 +1654,11 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
   }
 
   onItemSelectSectors(event: any) {
-    if(this.assessment.climateAction.policySector){
-      if(this.assessment.climateAction.policySector.length !=  this.sectorArray.length ){
+    if (this.assessment.climateAction.policySector) {
+      if (this.assessment.climateAction.policySector.length != this.sectorArray.length) {
         this.closeMultiSelect();
         this.confirmationService.confirm({
-          message: `You selected sectors that deviates from the one that was assigned to this intervention- ${ this.assessment.climateAction.policySector.map(i=> i.sector.name).join(",")}. Are you sure you want to continue with this selection?`,
+          message: `You selected sectors that deviates from the one that was assigned to this intervention- ${this.assessment.climateAction.policySector.map(i => i.sector.name).join(",")}. Are you sure you want to continue with this selection?`,
           header: 'Confirmation',
           acceptIcon: 'icon-not-visible',
           rejectIcon: 'icon-not-visible',
@@ -1641,18 +1667,18 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
           key: 'sectorConfirm',
           accept: () => {
           },
-          reject: () => { 
-            if(!this.isCompleted){
+          reject: () => {
+            if (!this.isCompleted) {
               this.sectorArray = this.sectorList
-            }else{
-             this.sectorArray = this.selectedSectorsCompleteMode
+            } else {
+              this.sectorArray = this.selectedSectorsCompleteMode
             }
           },
         });
       }
-      
+
     }
-    
+
   }
   closeMultiSelect() {
     if (this.multiSelectComponent) {
@@ -1688,7 +1714,7 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     return str
   }
 
-  adaptationJustificationChange(data: InvestorAssessment){
+  adaptationJustificationChange(data: InvestorAssessment) {
     if (data.category?.code === 'SUSTAINED_ADAPTATION' || data.characteristics.category?.code === 'SUSTAINED_ADAPTATION') {
       this.checkTab2Mandatory(6)
     }
@@ -1704,11 +1730,11 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     if (['NATIONAL', 'SUBNATIONAL'].includes(geoArea)) {
       for (let category of this.outcomeData) {
         let score = this.masterDataService.outcomeScaleScore.find(s => s.value === 99)
-        if (['SCALE_GHG'].includes(category.categoryCode)){
+        if (['SCALE_GHG'].includes(category.categoryCode)) {
           category.data = category.data.map(data => {
             if (data.characteristics.code === "MACRO_LEVEL") {
-              if (score?.value && !data.score) {data.score = score.value}
-              if (!data.justification) data.justification = 'The geographical area covered by this assessment is ' + (geoArea === 'NATIONAL' ? 'national/sectoral': 'sub-national/sub-sectoral.');
+              if (score?.value && !data.score) { data.score = score.value }
+              if (!data.justification) data.justification = 'The geographical area covered by this assessment is ' + (geoArea === 'NATIONAL' ? 'national/sectoral' : 'sub-national/sub-sectoral.');
             }
             return data;
           })
@@ -1716,8 +1742,8 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
           for (let sdg of this.sdgDataSendArray2) {
             this.sdgDataSendArray2.data = sdg.data.map((data: any) => {
               if (data.characteristics.code === "MACRO_LEVEL") {
-                if (score?.value && !data.score) {data.score = score.value}
-                if (!data.justification) data.justification = 'The geographical area covered by this assessment is ' + (geoArea=== 'NATIONAL' ? 'national/sectoral': 'sub-national/sub-sectoral.');
+                if (score?.value && !data.score) { data.score = score.value }
+                if (!data.justification) data.justification = 'The geographical area covered by this assessment is ' + (geoArea === 'NATIONAL' ? 'national/sectoral' : 'sub-national/sub-sectoral.');
               }
               return data;
             })
@@ -1725,8 +1751,8 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
         } else if (category.categoryCode === 'SCALE_ADAPTATION') {
           category.data = category.data.map(data => {
             if (data.characteristics.code === "INTERNATIONAL") {
-              if (score?.value && !data.score) {data.score = score.value}
-              if (!data.justification) data.justification = 'The geographical area covered by this assessment is ' + (geoArea === 'NATIONAL' ? 'national/sectoral': 'sub-national/sub-sectoral.');
+              if (score?.value && !data.score) { data.score = score.value }
+              if (!data.justification) data.justification = 'The geographical area covered by this assessment is ' + (geoArea === 'NATIONAL' ? 'national/sectoral' : 'sub-national/sub-sectoral.');
             }
             return data;
           })
@@ -1735,21 +1761,21 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     }
   }
 
-  onSelectScore(category: OutcomDataDto, characteristicCode: string, sdgIndex?:number) {
-    
+  onSelectScore(category: OutcomDataDto, characteristicCode: string, sdgIndex?: number) {
+
   }
 
   isMandatoryActive(category_code: string, characteristic_code: string) {
-    return ['MACRO_LEVEL', 'MEDIUM_LEVEL', 'MICRO_LEVEL', 'INTERNATIONAL', 'NATIONAL', 'SUBNATIONAL', 'LONG_TERM','MEDIUM_TERM','SHORT_TERM'].includes(characteristic_code)  || category_code === 'SUSTAINED_ADAPTATION';
+    return ['MACRO_LEVEL', 'MEDIUM_LEVEL', 'MICRO_LEVEL', 'INTERNATIONAL', 'NATIONAL', 'SUBNATIONAL', 'LONG_TERM', 'MEDIUM_TERM', 'SHORT_TERM'].includes(characteristic_code) || category_code === 'SUSTAINED_ADAPTATION';
   }
 
-  checkCategory(categoryCode: string, CharateristiCode: string){
+  checkCategory(categoryCode: string, CharateristiCode: string) {
     let isWarning = false
-    
-    if((categoryCode == 'SCALE_GHG' || categoryCode == 'SCALE_ADAPTATION') && ['MACRO_LEVEL', 'INTERNATIONAL'].includes(CharateristiCode)){
+
+    if ((categoryCode == 'SCALE_GHG' || categoryCode == 'SCALE_ADAPTATION') && ['MACRO_LEVEL', 'INTERNATIONAL'].includes(CharateristiCode)) {
       isWarning = true
     }
-    else if(categoryCode == 'SUSTAINED_GHG' || categoryCode == 'SUSTAINED_ADAPTATION'){
+    else if (categoryCode == 'SUSTAINED_GHG' || categoryCode == 'SUSTAINED_ADAPTATION') {
       isWarning = true
     }
     return isWarning

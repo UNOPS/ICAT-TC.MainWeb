@@ -258,7 +258,7 @@
                             <h6>Barriers &nbsp; <p-button  [hidden]="isSavedAssessment || (isEditMode && !isCompleted && isContinue)"  icon="pi pi-plus "  styleClass="p-button-sm p-button-rounded"  (click)="showDialog()"></p-button></h6>
                             <label><i>Add a barrier by clicking the “+” button. To add multiple barriers, click the “+” button again after saving your inputs.</i></label>
                           </div>
-                          <p-dialog header="Add barriers" [(visible)]="barrierBox"  [modal]="true" appendTo="body"  [style]="{width: '50vw'}"  >
+                          <p-dialog [header]="editingBarrierIndex > -1 ? 'Edit barrier' : 'Add barriers'" [(visible)]="barrierBox"  [modal]="true" appendTo="body"  [style]="{width: '50vw'}"  >
 
                             <div class="tooltip2-container">
                               <div>
@@ -400,7 +400,7 @@
               
                         </div>
                         <div *ngIf="finalBarrierList.length !==0" >
-                          <div class="row p-2" *ngFor="let barriers of finalBarrierList">
+                          <div class="row p-2" *ngFor="let barriers of finalBarrierList; let i = index">
               
                             <div class="col-12 col-md-2">
                               <div class="p-field">
@@ -420,7 +420,13 @@
                             </div>
                             <div class="col-12 col-md-4">
                               <div class="p-field">
-                                <div>{{barriers.affectedbyIntervention==true?'Yes':'No'}} </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                  <span>{{barriers.affectedbyIntervention==true?'Yes':'No'}} </span>
+                                  <span class="barrier-actions" [hidden]="isSavedAssessment || (isEditMode && !isCompleted && isContinue)">
+                                    <p-button icon="pi pi-pencil" styleClass="p-button-sm p-button-rounded p-button-text" (click)="editBarrier(i)"></p-button>
+                                    <p-button icon="pi pi-trash" styleClass="p-button-sm p-button-rounded p-button-text p-button-danger" (click)="deleteBarrier(i)"></p-button>
+                                  </span>
+                                </div>
               
                               </div>
                             </div>

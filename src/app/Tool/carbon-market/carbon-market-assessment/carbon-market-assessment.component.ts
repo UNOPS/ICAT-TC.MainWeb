@@ -53,6 +53,7 @@ export class CarbonMarketAssessmentComponent implements OnInit {
   barrierBox: boolean = false;
   barrierSelected: BarrierSelected = new BarrierSelected();
   finalBarrierList: BarrierSelected[] = [];
+  editingBarrierIndex: number = -1;
   barrierArray: PolicyBarriers[];
   isDownloading: boolean = true;
   isDownloadMode: number = 0;
@@ -545,8 +546,32 @@ logOutSubs: Subscription;
     this.autoSaveDialog = false
   }
 
+  editBarrier(index: number) {
+    const existing = this.finalBarrierList[index]
+    const copy = new BarrierSelected()
+    copy.barrier = existing.barrier
+    copy.explanation = existing.explanation
+    copy.affectedbyIntervention = existing.affectedbyIntervention
+    // Resolve stored characteristics to the option objects so the multiselect pre-selects them.
+    copy.characteristics = (existing.characteristics || []).map(
+      (c: any) => (this.barrierChList || []).find((o: any) => o.id === c.id) || c,
+    )
+    this.barrierSelected = copy
+    this.editingBarrierIndex = index
+    this.barrierBox = true
+  }
+
+  deleteBarrier(index: number) {
+    this.finalBarrierList.splice(index, 1)
+  }
+
   pushBarriers(barrier:any){
-    this.finalBarrierList.push(barrier)
+    if (this.editingBarrierIndex > -1) {
+      this.finalBarrierList[this.editingBarrierIndex] = barrier
+      this.editingBarrierIndex = -1
+    } else {
+      this.finalBarrierList.push(barrier)
+    }
     this.barrierSelected = new BarrierSelected()
   
   }
@@ -566,7 +591,9 @@ logOutSubs: Subscription;
     
   }
   showDialog(){
-    if (!this.isEditMode) this.barrierBox =true; 
+    this.editingBarrierIndex = -1;
+    this.barrierSelected = new BarrierSelected();
+    if (!this.isEditMode) this.barrierBox =true;
     else if (this.isEditMode && (this.isCompleted || !this.isContinue)) this.barrierBox = true;
   }
 
