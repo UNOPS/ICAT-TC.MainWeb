@@ -26,13 +26,15 @@ export class OtpComponent implements OnInit {
   ) { }
 
   async ngOnInit(): Promise<void> {
+    // The OTP page is only reached after a successful forgot-password request,
+    // which stores the username in `reset-key`. The account's profileState is
+    // enforced server-side by check-otp, so we no longer pre-check it here: that
+    // pre-check hit a protected /login-profile endpoint and returned 401 for the
+    // unauthenticated user mid-reset, bouncing them back to login before they
+    // could submit the OTP.
     const resetKey = localStorage.getItem('reset-key');
     if(resetKey){
       this.userName = resetKey;
-      const profileState = await this.getProfileState(this.userName);
-      if(profileState !== ProfileStatus.Resetting){
-        this.goLogin(); 
-      }
     }else{
       this.goLogin();
     }

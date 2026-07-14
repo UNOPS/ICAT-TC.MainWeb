@@ -27,13 +27,15 @@ export class ResetComponent implements OnInit {
   ) { }
 
   async ngOnInit(): Promise<void> {
+    // Reached only after check-otp succeeds (which sets profileState to
+    // OTPValidated and is what forwards the user here). reset-password enforces
+    // that state server-side, so we no longer pre-check it here: that pre-check
+    // hit a protected /login-profile endpoint and returned 401 for the
+    // unauthenticated user mid-reset, bouncing them back to login before they
+    // could set a new password.
     const resetKey = localStorage.getItem('reset-key');
     if(resetKey){
       this.userName = resetKey;
-      const profileState = await this.getProfileState(this.userName);
-      if(profileState !== ProfileStatus.OTPValidated){
-        this.goLogin(); 
-      }
     }else{
       this.goLogin();
     }
