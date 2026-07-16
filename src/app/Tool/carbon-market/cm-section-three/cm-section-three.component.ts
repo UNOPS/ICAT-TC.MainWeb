@@ -1,4 +1,4 @@
-import { HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output, QueryList, ViewChildren } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,6 +10,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { Subscription } from 'rxjs';
 import { AppService } from 'shared/AppService';
 import { Assessment, AssessmentCMDetailControllerServiceProxy, CMAssessmentQuestion, CMAssessmentQuestionControllerServiceProxy, CMDefaultValue, CMQuestion, CMQuestionControllerServiceProxy, CMResultDto, Category, Characteristics, Institution, InstitutionControllerServiceProxy, InvestorToolControllerServiceProxy, MethodologyAssessmentControllerServiceProxy, OutcomeCategory, PortfolioSdg, SaveCMResultDto, ScoreDto, UniqueCategory, UniqueCharacteristic } from 'shared/service-proxies/service-proxies';
+import { openAuthenticatedUploadedFile } from 'app/shared/authenticated-download.util';
 
 
 interface UploadEvent {
@@ -135,7 +136,8 @@ isLogoutClicked: boolean = false;
     private activatedRoute: ActivatedRoute,
     private router: Router,
     private appService: AppService,
-    private assessmentCMDetailControllerServiceProxy: AssessmentCMDetailControllerServiceProxy
+    private assessmentCMDetailControllerServiceProxy: AssessmentCMDetailControllerServiceProxy,
+    private http: HttpClient,
   ) {
     this.uploadUrl = environment.baseUrlAPI + "/document/upload-file-by-name" ; 
     this.fileServerURL = environment.baseUrlAPI+'/document/downloadDocumentsFromFileName/uploads';
@@ -1305,6 +1307,23 @@ isLogoutClicked: boolean = false;
 
   onSelectDefault(event: any, char: CMResultDto) {
     char.startingSituation = event.value.label
+  }
+
+  async downloadUploadedFile(fileName: string): Promise<void> {
+    if (!fileName) {
+      return;
+    }
+
+    try {
+      await openAuthenticatedUploadedFile(this.http, environment.baseUrlAPI, fileName);
+    } catch {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to download file',
+        closable: true,
+      });
+    }
   }
 }
 

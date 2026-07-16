@@ -12,7 +12,7 @@ import { HeatMapScore } from 'app/charts/heat-map/heat-map.component';
 import { scoresMatchMatrixCell } from 'app/shared/score-rounding.util';
 import * as moment from 'moment';
 import { MessageService } from 'primeng/api';
-import { openAuthenticatedReport } from 'app/shared/report-download.util';
+import { openAuthenticatedReport, openAuthenticatedUploadedFile, downloadAuthenticatedDocumentByPath } from 'app/shared/authenticated-download.util';
 
 @Component({
   selector: 'app-cm-result',
@@ -766,21 +766,33 @@ export class CmResultComponent implements OnInit {
     this.display = true;
   }
 
+  async downloadUploadedFile(fileName: string): Promise<void> {
+    if (!fileName) {
+      return;
+    }
+
+    try {
+      await openAuthenticatedUploadedFile(this.http, environment.baseUrlAPI, fileName);
+    } catch {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to download file',
+        closable: true,
+      });
+    }
+  }
+
   async downloadFiles(documents: any[]) {
     await Promise.all(
       documents.map(async (doc) => {
         try {
-          let response = await fetch(this.fileServerURL + '/' + doc);
-          let blob = await response.blob();
-          let link = document.createElement('a');
-          link.href = window.URL.createObjectURL(blob);
-          link.download = doc;
-          link.style.display = 'none';
-
-          document.body.appendChild(link);
-          link.click();
-  
-          document.body.removeChild(link);
+          await downloadAuthenticatedDocumentByPath(
+            this.http,
+            environment.baseUrlAPI,
+            `uploads/${doc}`,
+            doc,
+          );
         } catch (error) {
         }
       })

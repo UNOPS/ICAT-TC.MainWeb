@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { GuidanceVideoComponent } from 'app/guidance-video/guidance-video.component';
 import { MasterDataService } from 'app/shared/master-data.service';
@@ -5,6 +6,7 @@ import { environment } from 'environments/environment';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { DialogService } from 'primeng/dynamicdialog';
 import { Assessment, ClimateAction, CreateReportDto, MethodologyAssessmentControllerServiceProxy, ProjectControllerServiceProxy, ReportControllerServiceProxy } from 'shared/service-proxies/service-proxies';
+import { openAuthenticatedReport } from 'app/shared/authenticated-download.util';
 
 @Component({
   selector: 'app-report',
@@ -33,7 +35,6 @@ export class ReportComponent implements OnInit {
   assessments: Assessment[] = []
   pdfFiles: any;
   SERVER_URL = environment.baseUrlAPI;
-  DOWNLOAD_BY_NAMA_URL = environment.baseUrlAPI + "/document/downloadDocumentsFromFileName";
 
   constructor(
     private projectControllerServiceProxy: ProjectControllerServiceProxy,
@@ -43,6 +44,7 @@ export class ReportComponent implements OnInit {
     private messageService: MessageService,
     protected dialogService: DialogService,
     private confirmationService: ConfirmationService,
+    private http: HttpClient,
   ) { }
 
   async ngOnInit(): Promise<void> {
@@ -137,8 +139,17 @@ export class ReportComponent implements OnInit {
 
   }
 
-  view(path: string){
-    window.open(this.DOWNLOAD_BY_NAMA_URL +"/"+ path, "_blank");
+  async view(report: { id: number }): Promise<void> {
+    try {
+      await openAuthenticatedReport(this.http, this.SERVER_URL, report.id);
+    } catch {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to open report',
+        closable: true,
+      });
+    }
   }
   mapReportType(type: string ) : string {
     let returnType = ''

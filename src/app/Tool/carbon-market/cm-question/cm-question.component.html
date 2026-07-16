@@ -56,6 +56,6 @@
         <p>{{question['result']?.filePath}}</p>
     </div>
     <div class="col-4">
-        <a target="_blank" [href]="fileServerURL+'/'+question['result']?.filePath"><i class="pi pi-download download"></i></a>
+        <a href="#" (click)="downloadUploadedFile(question['result']?.filePath); $event.preventDefault()"><i class="pi pi-download download"></i></a>
     </div>
 </div>

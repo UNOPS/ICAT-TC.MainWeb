@@ -512,7 +512,7 @@
                                 <p>{{data.uploadedDocumentPath}}</p>
                               </div>
                               <div class="col-2 d-flex align-items-center" *ngIf="data.uploadedDocumentPath">
-                                <a target="_blank" [href]="fileServerURL+'/'+data.uploadedDocumentPath"><i class="pi pi-download download"></i></a>
+                                <a href="#" (click)="downloadUploadedFile(data.uploadedDocumentPath); $event.preventDefault()"><i class="pi pi-download download"></i></a>
                               </div>
                             </div>
                           </div>
@@ -629,7 +629,7 @@
                                   <p>{{data.uploadedDocumentPath}}</p>
                                 </div>
                                 <div class="col-2 d-flex align-items-center" *ngIf="data.uploadedDocumentPath">
-                                  <a target="_blank" [href]="fileServerURL+'/'+data.uploadedDocumentPath"><i class="pi pi-download download"></i></a>
+                                  <a href="#" (click)="downloadUploadedFile(data.uploadedDocumentPath); $event.preventDefault()"><i class="pi pi-download download"></i></a>
                                 </div>
                               </div>
                               <div *ngIf=" category.CategoryName ==='GHG Scale of the Outcome' && data.characteristics.name === 'Subnational/regional/municipal or sub sectoral level' ">
@@ -740,7 +740,7 @@
                                       <p>{{data.uploadedDocumentPath}}</p>
                                     </div>
                                     <div class="col-2 d-flex align-items-center" *ngIf="data.uploadedDocumentPath">
-                                      <a target="_blank" [href]="fileServerURL+'/'+data.uploadedDocumentPath"><i class="pi pi-download download"></i></a>
+                                      <a href="#" (click)="downloadUploadedFile(data.uploadedDocumentPath); $event.preventDefault()"><i class="pi pi-download download"></i></a>
                                     </div>
                                   </div>
                                 </div>
@@ -807,7 +807,7 @@
                                       <p>{{data.uploadedDocumentPath}}</p>
                                     </div>
                                     <div class="col-2 d-flex align-items-center" *ngIf="data.uploadedDocumentPath">
-                                      <a target="_blank" [href]="fileServerURL+'/'+data.uploadedDocumentPath"><i class="pi pi-download download"></i></a>
+                                      <a href="#" (click)="downloadUploadedFile(data.uploadedDocumentPath); $event.preventDefault()"><i class="pi pi-download download"></i></a>
                                     </div>
                                   </div>
                                 </div>

@@ -21,10 +21,10 @@
         <div class="row">
             <div style="padding: 10px; cursor: pointer;" class="col-md-4 col-xs-6" *ngFor="let r of pdfFiles">
                 <div class="row  d-flex justify-content-center">
-                    <img (click)="view(r.savedLocation)" src="./assets/images/pdf.webp" style="display: block; min-width:120px;max-width: 120px;">
+                    <img (click)="view(r)" src="./assets/images/pdf.webp" style="display: block; min-width:120px;max-width: 120px;">
                 </div>
                 <div class="row d-flex justify-content-center">
-                    <span class="row d-flex justify-content-center" (click)="view(r.savedLocation)">{{r.reportName}}</span>
+                    <span class="row d-flex justify-content-center" (click)="view(r)">{{r.reportName}}</span>
                 </div>
                 <div class="row d-flex justify-content-center mt-1">
                     <button pButton type="button" icon="pi pi-trash" class="p-button-danger p-button-text p-button-sm" pTooltip="Delete report" (click)="deleteReport(r)"></button>

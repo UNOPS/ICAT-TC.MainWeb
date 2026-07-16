@@ -298,7 +298,8 @@
                     <a
                       *ngIf="scale_GHGs?.document"
                       target="_blank"
-                      [href]="fileServerURL + '/' + scale_GHGs?.document"
+                      href="#"
+                      (click)="downloadUploadedFile(scale_GHGs?.document); $event.preventDefault()"
                       ><i class="pi pi-download download"></i
                     ></a>
                   </td>
@@ -380,7 +381,8 @@
                     <a
                       *ngIf="sustained_GHGs?.document"
                       target="_blank"
-                      [href]="fileServerURL + '/' + sustained_GHGs?.document"
+                      href="#"
+                      (click)="downloadUploadedFile(sustained_GHGs?.document); $event.preventDefault()"
                       ><i class="pi pi-download download"></i
                     ></a>
                   </td>
@@ -470,7 +472,8 @@
                     <a
                       *ngIf="scale_SDs?.document"
                       target="_blank"
-                      [href]="fileServerURL + '/' + scale_SDs?.document"
+                      href="#"
+                      (click)="downloadUploadedFile(scale_SDs?.document); $event.preventDefault()"
                       ><i class="pi pi-download download"></i
                     ></a>
                   </td>
@@ -554,7 +557,8 @@
                     <a
                       *ngIf="sustained_SDs?.document"
                       target="_blank"
-                      [href]="fileServerURL + '/' + sustained_SDs?.document"
+                      href="#"
+                      (click)="downloadUploadedFile(sustained_SDs?.document); $event.preventDefault()"
                       ><i class="pi pi-download download"></i
                     ></a>
                   </td>
@@ -666,7 +670,8 @@
                     <a
                       *ngIf="scale_ADs?.document"
                       target="_blank"
-                      [href]="fileServerURL + '/' + scale_ADs?.document"
+                      href="#"
+                      (click)="downloadUploadedFile(scale_ADs?.document); $event.preventDefault()"
                       ><i class="pi pi-download download"></i
                     ></a>
                   </td>
@@ -749,7 +754,8 @@
                     <a
                       *ngIf="sustained_ADs?.document"
                       target="_blank"
-                      [href]="fileServerURL + '/' + sustained_ADs?.document"
+                      href="#"
+                      (click)="downloadUploadedFile(sustained_ADs?.document); $event.preventDefault()"
                       ><i class="pi pi-download download"></i
                     ></a>
                   </td>

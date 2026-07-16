@@ -8,13 +8,14 @@ import decode from 'jwt-decode';
 import { TabView } from 'primeng/tabview';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from 'environments/environment';
-import { HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { GuidanceVideoComponent } from 'app/guidance-video/guidance-video.component';
 import { DialogService } from 'primeng/dynamicdialog';
 import { MultiSelect } from 'primeng/multiselect';
 import { AppService } from 'shared/AppService';
 import { Subscription } from 'rxjs';
 import { DashboardBaseComponent } from 'app/dashboard-base/dashboard-base.component';
+import { openAuthenticatedUploadedFile } from 'app/shared/authenticated-download.util';
 
 
 interface CharacteristicWeight {
@@ -213,6 +214,7 @@ export class InvestorToolComponent implements OnInit, AfterContentChecked, OnDes
     private confirmationService: ConfirmationService,
     private appService: AppService,
     private sectorProxy: SectorControllerServiceProxy,
+    private http: HttpClient,
 
   ) {
     this.uploadUrl = environment.baseUrlAPI + "/document/upload-file-by-name";
@@ -1867,6 +1869,23 @@ export class InvestorToolComponent implements OnInit, AfterContentChecked, OnDes
       isWarning = true
     }
     return isWarning
+  }
+
+  async downloadUploadedFile(fileName: string): Promise<void> {
+    if (!fileName) {
+      return;
+    }
+
+    try {
+      await openAuthenticatedUploadedFile(this.http, environment.baseUrlAPI, fileName);
+    } catch {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to download file',
+        closable: true,
+      });
+    }
   }
 
 }

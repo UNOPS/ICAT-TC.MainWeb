@@ -10,7 +10,7 @@ import { ColorMap } from 'app/Tool/carbon-market/cm-result/cm-result.component';
 import * as XLSX from 'xlsx-js-style';
 import { environment } from 'environments/environment';
 import * as moment from 'moment';
-import { openAuthenticatedReport } from 'app/shared/report-download.util';
+import { openAuthenticatedReport } from 'app/shared/authenticated-download.util';
 @Component({
   selector: 'app-portfolio-comparison',
   templateUrl: './portfolio-comparison.component.html',

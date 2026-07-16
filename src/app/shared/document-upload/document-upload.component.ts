@@ -17,6 +17,7 @@ import {
 } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { GlobalArrayService } from '../global-documents/global-documents.service';
+import { openAuthenticatedDocumentById } from '../authenticated-download.util';
 
 @Component({
   selector: 'app-document-upload',
@@ -90,9 +91,6 @@ export class DocumentUploadComponent implements OnInit, OnChanges {
             (res) => {
 
               this.doucmentList = res;
-              for (let doc of this.doucmentList){
-                  doc.url =  this.SERVER_URL1 +"/document/downloadDocument/attachment/"+doc.id 
-              }
               this.loading = false;
               let ids=res.map(item=>{return item.id})
             
@@ -112,9 +110,6 @@ export class DocumentUploadComponent implements OnInit, OnChanges {
             (res) => {
               this.valueClicked.emit({ data: res, res})
               this.doucmentList = res;
-              for (let doc of this.doucmentList){
-                doc.url =  this.SERVER_URL1 +"/document/downloadDocument/attachment/"+doc.id 
-            }
               this.loading = false;
             },
           );
@@ -204,6 +199,19 @@ export class DocumentUploadComponent implements OnInit, OnChanges {
       reject: () => {
       },
     });
+  }
+
+  async downloadDocument(doc: Documents): Promise<void> {
+    try {
+      await openAuthenticatedDocumentById(this.httpClient, this.SERVER_URL1, doc.id);
+    } catch {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to download document',
+        closable: true,
+      });
+    }
   }
 
   base64ToArrayBuffer(base64: any) {

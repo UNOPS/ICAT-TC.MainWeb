@@ -7,7 +7,7 @@ import { AllBarriersSelected, Assessment, AssessmentControllerServiceProxy, Barr
 import decode from 'jwt-decode';
 import { TabView } from 'primeng/tabview';
 import { environment } from 'environments/environment';
-import { HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
 import { DialogService } from 'primeng/dynamicdialog';
@@ -17,6 +17,7 @@ import { MultiSelect } from 'primeng/multiselect';
 import { OutcomDataDto } from '../investor-tool/investor-tool.component';
 import { AppService } from 'shared/AppService';
 import { Subscription } from 'rxjs';
+import { openAuthenticatedUploadedFile } from 'app/shared/authenticated-download.util';
 
 
 interface CharacteristicWeight {
@@ -188,7 +189,8 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
     private assessmentControllerServiceProxy: AssessmentControllerServiceProxy,
     protected dialogService: DialogService,
     private confirmationService: ConfirmationService,
-    private appService: AppService
+    private appService: AppService,
+    private http: HttpClient,
 
   ) {
     this.uploadUrl = environment.baseUrlAPI + "/document/upload-file-by-name";
@@ -1779,6 +1781,23 @@ export class PortfolioTrack4Component implements OnInit, OnDestroy {
       isWarning = true
     }
     return isWarning
+  }
+
+  async downloadUploadedFile(fileName: string): Promise<void> {
+    if (!fileName) {
+      return;
+    }
+
+    try {
+      await openAuthenticatedUploadedFile(this.http, environment.baseUrlAPI, fileName);
+    } catch {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to download file',
+        closable: true,
+      });
+    }
   }
 
 

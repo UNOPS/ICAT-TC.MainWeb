@@ -13,7 +13,7 @@ import { HeatMapScore } from 'app/charts/heat-map/heat-map.component';
 import { scoresMatchMatrixCell } from 'app/shared/score-rounding.util';
 import { MessageService } from 'primeng/api';
 import { environment } from 'environments/environment';
-import { openAuthenticatedReport } from 'app/shared/report-download.util';
+import { openAuthenticatedReport } from 'app/shared/authenticated-download.util';
 
 
 @Component({

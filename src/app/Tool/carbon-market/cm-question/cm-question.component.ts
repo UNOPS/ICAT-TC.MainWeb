@@ -1,9 +1,10 @@
-import { HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FieldNames, MasterDataService } from 'app/shared/master-data.service';
 import { environment } from 'environments/environment';
 import { MessageService } from 'primeng/api';
 import { CMAnswer, CMAssessmentAnswerControllerServiceProxy, CMAssessmentQuestion, CMQuestion, CMQuestionControllerServiceProxy, Institution, InstitutionControllerServiceProxy } from 'shared/service-proxies/service-proxies';
+import { openAuthenticatedUploadedFile } from 'app/shared/authenticated-download.util';
 
 interface UploadEvent {
   originalEvent: HttpResponse<FileDocument>;
@@ -49,7 +50,8 @@ export class CmQuestionComponent implements OnInit {
     private cMQuestionControllerServiceProxy: CMQuestionControllerServiceProxy,
     private institutionControllerServiceProxy: InstitutionControllerServiceProxy,
     private messageService: MessageService,
-    public masterDataService: MasterDataService
+    public masterDataService: MasterDataService,
+    private http: HttpClient,
   ) {
     this.uploadUrl = environment.baseUrlAPI + "/document/upload-file-by-name" ;
     this.fileServerURL = environment.baseUrlAPI+'/document/downloadDocumentsFromFileName/uploads';
@@ -128,6 +130,23 @@ export class CmQuestionComponent implements OnInit {
     if(event.originalEvent.body){
       let filePath = event.originalEvent.body.fileName
       this.prev_answer.emit({path: filePath, type: type})
+    }
+  }
+
+  async downloadUploadedFile(fileName: string): Promise<void> {
+    if (!fileName) {
+      return;
+    }
+
+    try {
+      await openAuthenticatedUploadedFile(this.http, environment.baseUrlAPI, fileName);
+    } catch {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to download file',
+        closable: true,
+      });
     }
   }
 

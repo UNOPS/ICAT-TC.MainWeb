@@ -177,7 +177,7 @@
                                         <p class="col-5">{{char.filePath}}</p>
                                     </div>
                                     <div class="col-4">
-                                        <a target="_blank" [href]="fileServerURL+'/'+char.filePath"><i class="pi pi-download download col-4"></i></a>
+                                        <a href="#" (click)="downloadUploadedFile(char.filePath); $event.preventDefault()"><i class="pi pi-download download col-4"></i></a>
                                     </div>
                                 </div>
                             </ng-container>
@@ -227,7 +227,7 @@
                                         <p class="col-5">{{char.filePath}}</p>
                                     </div>
                                     <div class="col-4">
-                                        <a target="_blank" [href]="fileServerURL+'/'+char.filePath"><i class="pi pi-download download col-4"></i></a>
+                                        <a href="#" (click)="downloadUploadedFile(char.filePath); $event.preventDefault()"><i class="pi pi-download download col-4"></i></a>
                                     </div>
                                 </div>
                             </ng-container>
@@ -379,7 +379,7 @@
                                         <p class="col-5">{{char.filePath}}</p>
                                     </div>
                                     <div class="col-4">
-                                        <a target="_blank" [href]="fileServerURL+'/'+char.filePath"><i class="pi pi-download download col-4"></i></a>
+                                        <a href="#" (click)="downloadUploadedFile(char.filePath); $event.preventDefault()"><i class="pi pi-download download col-4"></i></a>
                                     </div>
                                 </div>
                             </ng-container>
@@ -429,7 +429,7 @@
                                         <p class="col-5">{{char.filePath}}</p>
                                     </div>
                                     <div class="col-4">
-                                        <a target="_blank" [href]="fileServerURL+'/'+char.filePath"><i class="pi pi-download download col-4"></i></a>
+                                        <a href="#" (click)="downloadUploadedFile(char.filePath); $event.preventDefault()"><i class="pi pi-download download col-4"></i></a>
                                     </div>
                                 </div>
                             </ng-container>
@@ -577,7 +577,7 @@
                                                     <p class="col-5">{{char.filePath}}</p>
                                                 </div>
                                                 <div class="col-4">
-                                                    <a target="_blank" [href]="fileServerURL+'/'+char.filePath"><i class="pi pi-download download col-4"></i></a>
+                                                    <a href="#" (click)="downloadUploadedFile(char.filePath); $event.preventDefault()"><i class="pi pi-download download col-4"></i></a>
                                                 </div>
                                             </div>
                                         </ng-container>
@@ -630,7 +630,7 @@
                                                     <p class="col-5">{{chSus.filePath}}</p>
                                                 </div>
                                                 <div class="col-4">
-                                                    <a target="_blank" [href]="fileServerURL+'/'+chSus.filePath"><i class="pi pi-download download col-4"></i></a>
+                                                    <a href="#" (click)="downloadUploadedFile(chSus.filePath); $event.preventDefault()"><i class="pi pi-download download col-4"></i></a>
                                                 </div>
                                             </div>
                                         </ng-container>
