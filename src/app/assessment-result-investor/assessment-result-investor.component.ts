@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ClimateAction, CreateReportDto, InvestorToolControllerServiceProxy, MethodologyAssessmentControllerServiceProxy, ReportControllerServiceProxy } from 'shared/service-proxies/service-proxies';
@@ -12,6 +13,7 @@ import { HeatMapScore } from 'app/charts/heat-map/heat-map.component';
 import { scoresMatchMatrixCell } from 'app/shared/score-rounding.util';
 import { MessageService } from 'primeng/api';
 import { environment } from 'environments/environment';
+import { openAuthenticatedReport } from 'app/shared/report-download.util';
 
 
 @Component({
@@ -95,7 +97,8 @@ export class AssessmentResultInvestorComponent implements OnInit {
     private investorToolControllerproxy: InvestorToolControllerServiceProxy,
     public masterDataService: MasterDataService,
     private reportControllerServiceProxy: ReportControllerServiceProxy,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private http: HttpClient,
 
   ) { }
   ngOnInit(): void {
@@ -327,15 +330,24 @@ export class AssessmentResultInvestorComponent implements OnInit {
       if (res) {
     
         this.display = false
-        setTimeout(() => {
-          window.open(this.SERVER_URL +'/report/downloadReport/inline/'+res.id, "_blank")
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Report generated successfully',
-            closable: true,
-          })
-        },5000)
+        setTimeout(async () => {
+          try {
+            await openAuthenticatedReport(this.http, this.SERVER_URL, res.id);
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: 'Report generated successfully',
+              closable: true,
+            });
+          } catch {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Report was generated but could not be opened',
+              closable: true,
+            });
+          }
+        }, 5000);
       }
     }, error => {
       this.messageService.add({

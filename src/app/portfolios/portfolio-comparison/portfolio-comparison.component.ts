@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { MasterDataService } from 'app/shared/master-data.service';
@@ -9,6 +10,7 @@ import { ColorMap } from 'app/Tool/carbon-market/cm-result/cm-result.component';
 import * as XLSX from 'xlsx-js-style';
 import { environment } from 'environments/environment';
 import * as moment from 'moment';
+import { openAuthenticatedReport } from 'app/shared/report-download.util';
 @Component({
   selector: 'app-portfolio-comparison',
   templateUrl: './portfolio-comparison.component.html',
@@ -39,7 +41,8 @@ export class PortfolioComparisonComponent implements OnInit {
     private portfolioServiceProxy: PortfolioControllerServiceProxy,
     private reportControllerServiceProxy: ReportControllerServiceProxy,
     private masterDataService: MasterDataService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private http: HttpClient,
   ) { }
 
   ngOnInit(): void {
@@ -152,15 +155,24 @@ export class PortfolioComparisonComponent implements OnInit {
     this.reportControllerServiceProxy.generateComparisonReport(body).subscribe(res => {
    
       if (res) {
-        setTimeout(() => {
-          window.open(this.SERVER_URL +'/report/downloadReport/inline/'+res.id, "_blank")
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Report generated successfully',
-            closable: true,
-          })
-        },5000)
+        setTimeout(async () => {
+          try {
+            await openAuthenticatedReport(this.http, this.SERVER_URL, res.id);
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Success',
+              detail: 'Report generated successfully',
+              closable: true,
+            });
+          } catch {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Report was generated but could not be opened',
+              closable: true,
+            });
+          }
+        }, 5000);
         
       }
       this.display = false
