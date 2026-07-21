@@ -1,5 +1,5 @@
 import { Platform } from '@angular/cdk/platform';
-import { Component, Input, ViewChild } from '@angular/core';
+import { Component, Input, OnChanges, ViewChild } from '@angular/core';
 import { OverlayPanel } from 'primeng/overlaypanel';
 import { floorToHalf, scoresMatchMatrixCell } from 'app/shared/score-rounding.util';
 
@@ -8,7 +8,7 @@ import { floorToHalf, scoresMatchMatrixCell } from 'app/shared/score-rounding.ut
   templateUrl: './heat-map.component.html',
   styleUrls: ['./heat-map.component.css']
 })
-export class HeatMapComponent {
+export class HeatMapComponent implements OnChanges {
 
   @Input() xData: {label: string; value: number}[]
   @Input() yData: {label: string; value: number}[]
@@ -26,6 +26,7 @@ export class HeatMapComponent {
   @ViewChild('op') op: OverlayPanel;
   pointTableDatas: TableData[];
   isSafari: boolean = false
+  private dotsByCell = new Map<string, HeatMapDot[]>();
 
   constructor(
     public platform: Platform
@@ -75,55 +76,108 @@ export class HeatMapComponent {
     return a;
   }
 
+  ngOnChanges(): void {
+    this.buildDots();
+  }
+
   /**
-   * Positions the dot within its matrix cell. In precise mode a score sitting on
-   * a half-step (e.g. 2.5) is nudged half a cell toward the next-higher value so
-   * it lands on the gridline between boxes; a whole-number score stays centered.
-   * Returns an empty object (no override) when precise mode is off, so the
-   * existing centered rendering used by the dashboards is unchanged.
+   * Dots to draw in a cell. Precomputed in ngOnChanges so the array reference is
+   * stable across change detection (a fresh array each cycle would thrash *ngFor).
    */
-  getDotStyle(x: number, y: number): { [key: string]: string } {
-    if (!this.preciseDotPosition || !this.score) {
-      return {};
+  getDots(x: number, y: number): HeatMapDot[] {
+    return this.dotsByCell.get(x + '|' + y) || [];
+  }
+
+  /**
+   * Groups the scores of each cell into the dots to render.
+   *
+   * In precise mode a score is placed at half-step (0.5) resolution: the
+   * remainder left after flooring to a half is either 0 or 0.5 on each axis, so
+   * a cell has at most four positions — centre, the gridline it shares with the
+   * next-higher outcome, the gridline it shares with the next-higher process, or
+   * the corner where both meet. Scores are grouped by that position so each
+   * group keeps the single counted dot the matrix already uses.
+   *
+   * When precise mode is off, every score in a cell forms one centred dot, which
+   * is the original behaviour.
+   */
+  private buildDots(): void {
+    this.dotsByCell = new Map<string, HeatMapDot[]>();
+    if (!this.xData || !this.yData) {
+      return;
     }
 
-    const match = this.score.find((item) =>
-      scoresMatchMatrixCell(item.processScore, item.outcomeScore, y, x),
-    );
-    if (!match) {
-      return {};
+    const xDescending = this.isDescending(this.xData);
+    const yDescending = this.isDescending(this.yData);
+
+    for (const x of this.xData) {
+      for (const y of this.yData) {
+        const matches = (this.score || []).filter((item) =>
+          scoresMatchMatrixCell(item.processScore, item.outcomeScore, y.value, x.value),
+        );
+        if (matches.length === 0) {
+          continue;
+        }
+
+        const dots = new Map<string, HeatMapDot>();
+        for (const item of matches) {
+          const outcomeRemainder = this.preciseDotPosition
+            ? floorToHalf(item.outcomeScore) - Math.floor(item.outcomeScore)
+            : 0;
+          const processRemainder = this.preciseDotPosition
+            ? floorToHalf(item.processScore) - Math.floor(item.processScore)
+            : 0;
+
+          const key = outcomeRemainder + '|' + processRemainder;
+          let dot = dots.get(key);
+          if (!dot) {
+            // Higher axis values are drawn first (top/left), so a .5 remainder
+            // shifts the dot onto the top/left gridline. Percentages are of the cell.
+            dot = {
+              outcomeRemainder,
+              processRemainder,
+              count: 0,
+              style: {
+                position: 'absolute',
+                left:
+                  outcomeRemainder === 0.5 ? (xDescending ? '0%' : '100%') : '50%',
+                top:
+                  processRemainder === 0.5 ? (yDescending ? '0%' : '100%') : '50%',
+                transform: 'translate(-50%, -50%)',
+                margin: '0',
+              },
+            };
+            dots.set(key, dot);
+          }
+          dot.count++;
+        }
+
+        this.dotsByCell.set(x.value + '|' + y.value, Array.from(dots.values()));
+      }
     }
-
-    const outcomeRemainder =
-      floorToHalf(match.outcomeScore) - Math.floor(match.outcomeScore);
-    const processRemainder =
-      floorToHalf(match.processScore) - Math.floor(match.processScore);
-
-    // Higher axis values are drawn first (top/left), so a .5 remainder shifts the
-    // dot toward the top/left gridline. left/top are percentages of the cell.
-    const left =
-      outcomeRemainder === 0.5 ? (this.isDescending(this.xData) ? '0%' : '100%') : '50%';
-    const top =
-      processRemainder === 0.5 ? (this.isDescending(this.yData) ? '0%' : '100%') : '50%';
-
-    return {
-      position: 'absolute',
-      left,
-      top,
-      transform: 'translate(-50%, -50%)',
-      margin: '0',
-    };
   }
 
   private isDescending(data?: { value: number }[]): boolean {
     return !!data && data.length > 1 && data[0].value > data[data.length - 1].value;
   }
 
-  enterHeatMapPoint(x: number, y: number, event: any) {
+  enterHeatMapPoint(x: number, y: number, event: any, dot?: HeatMapDot) {
     if (this.tableData) {
-      this.pointTableDatas = this.tableData.filter((item) =>
-        scoresMatchMatrixCell(item.processScore, item.outcomeScore, y, x),
-      );
+      this.pointTableDatas = this.tableData.filter((item) => {
+        if (!scoresMatchMatrixCell(item.processScore, item.outcomeScore, y, x)) {
+          return false;
+        }
+        if (!this.preciseDotPosition || !dot) {
+          return true;
+        }
+        // Only the interventions sitting at this dot's half-step position.
+        return (
+          floorToHalf(item.outcomeScore) - Math.floor(item.outcomeScore) ===
+            dot.outcomeRemainder &&
+          floorToHalf(item.processScore) - Math.floor(item.processScore) ===
+            dot.processRemainder
+        );
+      });
       if (this.pointTableDatas.length > 0) {
         this.op.show(event);
       }
@@ -134,6 +188,15 @@ export class HeatMapComponent {
     this.pointTableDatas = [];
   }
 
+}
+
+export interface HeatMapDot {
+  /** 0 or 0.5 — how far past the whole-number cell the score sits on each axis. */
+  outcomeRemainder: number
+  processRemainder: number
+  /** How many scores share this position. */
+  count: number
+  style: { [key: string]: string }
 }
 
 export interface HeatMapScore {

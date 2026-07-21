@@ -16,10 +16,11 @@
                 <td style="font-size: small;">{{y.label}}</td>
                 <ng-container *ngFor="let x of xData">
                     <td class="charttd" [style.background-color]="getBackgroundColor(x.value, y.value)" [style.color]="getIntervention(x.value, y.value)?'#404040':getBackgroundColor(x.value, y.value)">
-                        <span (mouseenter)="enterHeatMapPoint(x.value, y.value,$event);"
+                        <span *ngFor="let dot of getDots(x.value, y.value)"
+                            (mouseenter)="enterHeatMapPoint(x.value, y.value,$event,dot);"
                             (mouseleave)="leaveHeatMapPoint();op.hide()"
-                            [ngStyle]="getDotStyle(x.value, y.value)"
-                            [ngClass]="getIntervention(x.value, y.value)==1? 'intervention':(getIntervention(x.value, y.value)>1? 'intervention-large':'')">1</span>
+                            [ngStyle]="dot.style"
+                            [ngClass]="dot.count==1? 'intervention':(dot.count>1? 'intervention-large':'')">1</span>
                     </td>
                 </ng-container>
             </tr>
