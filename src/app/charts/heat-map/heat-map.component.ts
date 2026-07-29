@@ -10,8 +10,8 @@ import { floorToHalf, scoresMatchMatrixCell } from 'app/shared/score-rounding.ut
 })
 export class HeatMapComponent implements OnChanges {
 
-  @Input() xData: {label: string; value: number}[]
-  @Input() yData: {label: string; value: number}[]
+  @Input() xData: { label: string; value: number }[]
+  @Input() yData: { label: string; value: number }[]
   @Input() score: HeatMapScore[]
   @Input() showOp?: boolean
   @Input() tableData?: TableData[]
@@ -30,7 +30,7 @@ export class HeatMapComponent implements OnChanges {
 
   constructor(
     public platform: Platform
-  ){
+  ) {
     this.isSafari = platform.SAFARI
   }
 
@@ -93,7 +93,7 @@ export class HeatMapComponent implements OnChanges {
    *
    * In precise mode a score is placed at half-step (0.5) resolution: the
    * remainder left after flooring to a half is either 0 or 0.5 on each axis, so
-   * a cell has at most four positions — centre, the gridline it shares with the
+   * a cell has at most four positions - centre, the gridline it shares with the
    * next-higher outcome, the gridline it shares with the next-higher process, or
    * the corner where both meet. Scores are grouped by that position so each
    * group keeps the single counted dot the matrix already uses.
@@ -173,9 +173,9 @@ export class HeatMapComponent implements OnChanges {
         // Only the interventions sitting at this dot's half-step position.
         return (
           floorToHalf(item.outcomeScore) - Math.floor(item.outcomeScore) ===
-            dot.outcomeRemainder &&
+          dot.outcomeRemainder &&
           floorToHalf(item.processScore) - Math.floor(item.processScore) ===
-            dot.processRemainder
+          dot.processRemainder
         );
       });
       if (this.pointTableDatas.length > 0) {
@@ -191,7 +191,7 @@ export class HeatMapComponent implements OnChanges {
 }
 
 export interface HeatMapDot {
-  /** 0 or 0.5 — how far past the whole-number cell the score sits on each axis. */
+  /** 0 or 0.5 - how far past the whole-number cell the score sits on each axis. */
   outcomeRemainder: number
   processRemainder: number
   /** How many scores share this position. */
