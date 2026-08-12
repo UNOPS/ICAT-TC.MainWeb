@@ -852,19 +852,27 @@ export class ClimateActionComponent implements OnInit  {
   async edit(label: string){
     if (label === 'Edit') {
       this.editMode =true;
+      return;
     }
-    else {
-      this.editMode =false;
-      this.project.geographicalAreaCovered = this.project.geographicalAreaCovered;
-      this.project.levelofImplemenation = this.project.levelofImplemenation;
-      this.project.dateOfCompletion= this.dateOfCompletion
-      this.project.dateOfImplementation =this.dateOfImplementation;
-      
-      let obj = new AddPolicySector
-      obj.id =this.project.id;
-      obj.sector=this.finalSectors;
-      await this.projectProxy.deletePolicySector(this.project.id).toPromise();
+
+    this.project.geographicalAreaCovered = this.project.geographicalAreaCovered;
+    this.project.levelofImplemenation = this.project.levelofImplemenation;
+    this.project.dateOfCompletion= this.dateOfCompletion
+    this.project.dateOfImplementation =this.dateOfImplementation;
+
+    let obj = new AddPolicySector
+    obj.id =this.project.id;
+    obj.sector=this.finalSectors;
+    let requestedStatusId = this.project.projectStatus?.id;
+
+    try {
+      // Replaces the sectors server-side in one transaction.
       await this.projectProxy.addPolicySector(obj).toPromise();
+      let res = await this.projectProxy.updateOneClimateAction(this.project).toPromise();
+
+      // Only leave edit mode once the server has confirmed the write, so a
+      // failed save never renders as a committed read-only form.
+      this.editMode =false;
 
       this.sectornames=[]
       for(let x of this.finalSectors){
@@ -873,29 +881,56 @@ export class ClimateActionComponent implements OnInit  {
       this.sectorsJoined = ''
       this.sectorsJoined = this.sectornames.join(', ')
 
-      this.projectProxy.updateOneClimateAction(this.project)
-      .subscribe(
-        (res) => {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Intervention update successfully.',
-            closable: true,
-          });
-        },
-        (err) => {
-          this.messageService.add({
-            severity: 'error',
-            summary: 'Error.',
-            detail: 'Internal server error, please try again.',
-            sticky: true,
-          });
-        }
-      );
+      if (!this.applySavedProjectStatus(res, requestedStatusId)) {
+        return;
+      }
 
-      
-
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'Intervention update successfully.',
+        closable: true,
+      });
+    } catch (err) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error.',
+        detail: 'The intervention could not be updated, please try again.',
+        sticky: true,
+      });
     }
+  }
+
+  // Re-binds the status from what the server actually stored rather than
+  // trusting the local value. Returns false (and warns) when the two disagree,
+  // so a silently dropped status is visible immediately instead of on refresh.
+  private applySavedProjectStatus(res: any, requestedStatusId: number | undefined): boolean {
+    let savedStatusId = res?.projectStatus?.id;
+    if (!savedStatusId) {
+      return true;
+    }
+
+    // Match the dropdown's own option object, otherwise p-dropdown compares by
+    // reference against projectStatusList and renders blank.
+    let savedStatus = this.projectStatusList.find((a) => a.id === savedStatusId);
+    if (savedStatus) {
+      this.project.projectStatus = savedStatus;
+    }
+
+    if (requestedStatusId && savedStatusId !== requestedStatusId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Status not saved',
+        detail:
+          'The intervention was updated, but its status is still "' +
+          (savedStatus?.name ?? res.projectStatus.name) +
+          '". Please try again or contact support.',
+        sticky: true,
+      });
+      return false;
+    }
+
+    return true;
   }
 
   confirmBack(label: string) {

@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { Portfolio, PortfolioControllerServiceProxy } from 'shared/service-proxies/service-proxies';
+import { floorToHalf } from 'app/shared/score-rounding.util';
 
 @Component({
   selector: 'app-portfolio-result',
@@ -26,14 +27,14 @@ export class PortfolioResultComponent implements OnInit {
   processData: any = [];
   outcomeData: any[] = [];
   outcomeData2: any[] = [];
-  allData : any = [];
+  allData: any = [];
 
-  tableShow : boolean =false;
-  tableShow2 : boolean =false;
-  tableShow3 : boolean =false;
-  tableShow4 : boolean =false;
+  tableShow: boolean = false;
+  tableShow2: boolean = false;
+  tableShow3: boolean = false;
+  tableShow4: boolean = false;
 
-  noOfAssessments : number;
+  noOfAssessments: number;
 
   @ViewChild('content', { static: false }) el!: ElementRef;
   @ViewChild('content') content: ElementRef;
@@ -65,9 +66,9 @@ export class PortfolioResultComponent implements OnInit {
       this.outcomeData2 = [];
 
       for (let data of res) {
-      this.processData = [];
-      this.outcomeData = [];
-      this.outcomeData2 = [];
+        this.processData = [];
+        this.outcomeData = [];
+        this.outcomeData2 = [];
         for (let x of data.result) {
           if (x.type === 'process') {
             this.processData.push(x);
@@ -85,79 +86,79 @@ export class PortfolioResultComponent implements OnInit {
         }
 
         let obj = {
-          assess : data.assessment,
-          process : this.processData,
-          scale : this.outcomeData,
-          sustained : this.outcomeData2,
-          ghgValue : data.ghgValue,
+          assess: data.assessment,
+          process: this.processData,
+          scale: this.outcomeData,
+          sustained: this.outcomeData2,
+          ghgValue: data.ghgValue,
         }
 
         this.allData.push(obj);
       }
 
 
-     for(let assessment of this.allData){
+      for (let assessment of this.allData) {
 
-      const data: any = assessment.scale[1]
+        const data: any = assessment.scale[1]
 
-      const averages: any = {};
+        const averages: any = {};
 
-     data.characteristics.forEach((obj: { name: string; score: any; }) => {
-       if (obj.name in averages) {
-         averages[obj.name].score += obj.score || 0;
-         averages[obj.name].count++;
-       } else {
-         averages[obj.name] = {
-          score: obj.score || 0,
-           count: 1
-         };
-       }
-     });
-
-     const result = [];
-
-     for (const name in averages) {
-       const averageScaleScore = averages[name].score / averages[name].count;
-
-       result.push({
-        score: averageScaleScore.toFixed(0),
-         name: name
-       });
-     }
-
-      const data2: any =  assessment.sustained[1]
-
-      const averages2: any = {};
-
-      data2.characteristics.forEach((obj: { name: string; score: any; }) => {
-        if (obj.name in averages2) {
-          averages2[obj.name].score += obj.score || 0;
-          averages2[obj.name].count++;
-        } else {
-          averages2[obj.name] = {
-            score: obj.score || 0,
-            count: 1
-          };
-        }
-      });
-
-      const result2 = [];
-
-      for (const name in averages2) {
-        const averageSustainedScore2 = averages2[name].score / averages2[name].count;
-
-        result2.push({
-          score: averageSustainedScore2.toFixed(0),
-          name: name
+        data.characteristics.forEach((obj: { name: string; score: any; }) => {
+          if (obj.name in averages) {
+            averages[obj.name].score += obj.score || 0;
+            averages[obj.name].count++;
+          } else {
+            averages[obj.name] = {
+              score: obj.score || 0,
+              count: 1
+            };
+          }
         });
+
+        const result = [];
+
+        for (const name in averages) {
+          const averageScaleScore = averages[name].score / averages[name].count;
+
+          result.push({
+            score: floorToHalf(averageScaleScore),
+            name: name
+          });
+        }
+
+        const data2: any = assessment.sustained[1]
+
+        const averages2: any = {};
+
+        data2.characteristics.forEach((obj: { name: string; score: any; }) => {
+          if (obj.name in averages2) {
+            averages2[obj.name].score += obj.score || 0;
+            averages2[obj.name].count++;
+          } else {
+            averages2[obj.name] = {
+              score: obj.score || 0,
+              count: 1
+            };
+          }
+        });
+
+        const result2 = [];
+
+        for (const name in averages2) {
+          const averageSustainedScore2 = averages2[name].score / averages2[name].count;
+
+          result2.push({
+            score: floorToHalf(averageSustainedScore2),
+            name: name
+          });
+        }
+
+        assessment.scale[1].characteristics = [];
+        assessment.scale[1].characteristics = result;
+        assessment.sustained[1].characteristics = [];
+        assessment.sustained[1].characteristics = result2;
+
       }
-
-      assessment.scale[1].characteristics = [];
-      assessment.scale[1].characteristics = result;
-      assessment.sustained[1].characteristics = [];
-      assessment.sustained[1].characteristics = result2;
-
-     }
 
 
 
@@ -174,16 +175,16 @@ export class PortfolioResultComponent implements OnInit {
 
 
 
-      this.card.push(
-        ...[
-          { title: 'Portfolio ID', data: this.portfolio.portfolioId },
-          { title: 'Name of the portfolio', data: this.portfolio.portfolioName },
-          { title: 'Description', data: this.portfolio.description },
-          { title: 'Is this assessment an update of a previous assessment?', data: res[0].IsPreviousAssessment },
-          { title: 'Objective(s) of the assessment', data: this.portfolio.objectives },
-          { title: 'Intended audience(s) of the assessment', data: this.portfolio.audience },
-          { title: 'Number of assessments', data: await this.noOfAssessments }
-        ])
+        this.card.push(
+          ...[
+            { title: 'Portfolio ID', data: this.portfolio.portfolioId },
+            { title: 'Name of the portfolio', data: this.portfolio.portfolioName },
+            { title: 'Description', data: this.portfolio.description },
+            { title: 'Is this assessment an update of a previous assessment?', data: res[0].IsPreviousAssessment },
+            { title: 'Objective(s) of the assessment', data: this.portfolio.objectives },
+            { title: 'Intended audience(s) of the assessment', data: this.portfolio.audience },
+            { title: 'Number of assessments', data: await this.noOfAssessments }
+          ])
       });
 
     });
@@ -193,43 +194,47 @@ export class PortfolioResultComponent implements OnInit {
   calculateAverage(data: any[]) {
     const sum = data.reduce((accumulator, item) => accumulator + parseFloat(item.likelihoodAverage), 0);
     const average = sum / data.length;
-    return average.toFixed(0);
+    return floorToHalf(average);
   }
 
   calculateAverageRelevance(data: any[]) {
     const sum = data.reduce((accumulator, item) => accumulator + parseFloat(item.relevanceAverage), 0);
     const average = sum / data.length;
-    return average.toFixed(0);
+    return floorToHalf(average);
   }
 
   calculateAverageScale(data: any[]) {
     const sum = data.reduce((accumulator, item) => accumulator + parseFloat(item.scoreAverage), 0);
     const average = sum / data.length;
-    return average.toFixed(0);
+    return floorToHalf(average);
   }
 
   calculateAverageSustained(data: any[]) {
     const sum = data.reduce((accumulator, item) => accumulator + parseFloat(item.scoreAverage), 0);
     const average = sum / data.length;
-    return average.toFixed(0);
+    return floorToHalf(average);
   }
 
+  private colorBand(value: any): number {
+    const numericValue = Number(value);
+    return Number.isNaN(numericValue) ? NaN : Math.floor(numericValue);
+  }
 
   getColorClass(value: any) {
-    let value2 = Number(value)
+    let value2 = this.colorBand(value)
     if (value2 == 0) {
       return 'color-class-1';
     } else if (value2 == 1) {
       return 'color-class-2';
-    } else if (value2 == 2 ) {
+    } else if (value2 == 2) {
       return 'color-class-3';
-   } else {
+    } else {
       return 'default-color-class';
     }
   }
 
   getColorClass2(value: any) {
-    let value2 = Number(value)
+    let value2 = this.colorBand(value)
     if (value2 == 0) {
       return 'color-class-21';
     } else if (value2 == 1) {
@@ -249,7 +254,7 @@ export class PortfolioResultComponent implements OnInit {
   }
 
   getColorClass3(value: any) {
-    let value2 = Number(value)
+    let value2 = this.colorBand(value)
     if (value2 == -1) {
       return 'color-class-31';
     } else if (value2 == 0) {
@@ -268,27 +273,27 @@ export class PortfolioResultComponent implements OnInit {
     }
   }
 
-  clickData : any = [];
-  clickData2 : any = [];
-  clickData3 : any = [];
-  clickData4 : any = [];
+  clickData: any = [];
+  clickData2: any = [];
+  clickData3: any = [];
+  clickData4: any = [];
 
-  handleClick(cha : any){
+  handleClick(cha: any) {
     this.clickData = cha;
     this.tableShow = true;
   }
 
-  handleClick2(cha : any){
+  handleClick2(cha: any) {
     this.clickData2 = cha;
     this.tableShow2 = true;
   }
 
-  handleClick3(cha : any){
+  handleClick3(cha: any) {
     this.clickData3 = cha;
     this.tableShow3 = true;
   }
 
-  handleClick4(cha : any){
+  handleClick4(cha: any) {
     this.clickData4 = cha;
     this.tableShow4 = true;
   }
@@ -296,7 +301,7 @@ export class PortfolioResultComponent implements OnInit {
 
   public async showTable() {
     this.tableShow = false;
-}
+  }
 
   public async showTable2() {
     this.tableShow2 = false;
@@ -337,7 +342,7 @@ export class PortfolioResultComponent implements OnInit {
   }
 
 
-  Back(){
+  Back() {
     this.router.navigate(['/app/portfolio-list'],);
   }
 }
