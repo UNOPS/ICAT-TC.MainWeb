@@ -240,7 +240,7 @@ export class UserFormComponent implements OnInit, AfterViewInit {
               );
           },
           (error) => {
-s            this.coreatingUser = false;
+            this.coreatingUser = false;
             this.messageService.add({
               severity: 'error',
               summary: 'Error',
