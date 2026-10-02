@@ -2,11 +2,12 @@ import { ServiceProxy, User, Institution, UsersControllerServiceProxy, UserType,
 import decode from 'jwt-decode';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ConfirmationService, LazyLoadEvent, MessageService, SelectItem } from "primeng/api";
-import { RecordStatus } from 'shared/AppService';
+import { LoginRole, RecordStatus } from 'shared/AppService';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DialogService } from 'primeng/dynamicdialog';
 import { GuidanceVideoComponent } from 'app/guidance-video/guidance-video.component';
-import { LoginProfileControllerServiceProxy } from 'shared/service-proxies/auth-service-proxies';
+import { HttpClient } from '@angular/common/http';
+import { environment } from 'environments/environment';
 @Component({
   selector: 'app-user-list',
   templateUrl: './user-list.component.html',
@@ -35,6 +36,9 @@ export class UserListComponent implements OnInit {
   userTypes: UserType[] = [];
   selctedUserType: UserType;
 
+  isMasterAdmin: boolean = false;
+  myUserName: string = '';
+
   searchBy: any = {
     text: null,
     usertype: null,
@@ -49,7 +53,7 @@ export class UserListComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private userControllerService: UsersControllerServiceProxy,
     protected dialogService: DialogService,
-    private loginProfileControllerServiceProxy: LoginProfileControllerServiceProxy,
+    private http: HttpClient,
     private UserTypeServiceProxy: UserTypeControllerServiceProxy,
 
   ) { }
@@ -79,6 +83,8 @@ export class UserListComponent implements OnInit {
     const token = localStorage.getItem('ACCESS_TOKEN')!;
     const tokenPayload = decode<any>(token);
     const userTypeId = tokenPayload.role.id;
+    this.isMasterAdmin = tokenPayload.role?.code === LoginRole.MASTER_ADMIN;
+    this.myUserName = tokenPayload.username;
 
     this.serviceProxy
       .getManyBaseInstitutionControllerInstitution(
@@ -172,44 +178,47 @@ export class UserListComponent implements OnInit {
     this.router.navigate(['../view'], { queryParams: { id: id }, relativeTo: this.activatedRoute });
   }
 
-  onDeleteClick(id: number) {
+  onDeleteClick(user: User) {
     this.confirmationService.confirm({
-      message: 'Are you sure you want to delete the user?',
-      header: 'Delete confirmation',
+      message: `Delete ${user.email} everywhere? They will no longer be able to log in, and the email can be invited again. Their assessments and other data are kept.`,
+      header: 'Delete user',
       acceptIcon: 'icon-not-visible',
       rejectIcon: 'icon-not-visible',
       accept: () => {
-        this.delete(id);
+        this.http.delete<any>(`${environment.baseUrlAPI}/users/admin/${user.id}`).subscribe({
+          next: (res) => {
+            this.showMessage('success', 'Success', res?.pmu === 'failed'
+              ? `${user.email} was deleted, but removing them from the PMU portal failed.`
+              : `${user.email} was deleted.`);
+            this.onSearch();
+          },
+          error: (err) => this.showMessage('error', 'Error', err?.error?.message || 'Could not delete the user.'),
+        });
       },
       reject: () => { },
     });
   }
 
-  delete(id: number) {
-    const u = this.userList.find(lp => lp.id === id);
-
-    if (u) {
-      this.deleteLoginProfile(u.loginProfile);
-      u.status = RecordStatus.Deleted;
-      this.serviceProxy.updateOneBaseUsersControllerUser(id, u)
-        .subscribe(res => {
-          this.load({ rows: this.rows, first: 0 });
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Success',
-            detail: 'Deteled successfully',
-            closable: true,
-          });
-        })
-    }
+  onSendResetClick(user: User) {
+    this.confirmationService.confirm({
+      message: `Send ${user.email} an email with a one-time code to set a new password? Their current password will stop working.`,
+      header: 'Send password reset',
+      acceptIcon: 'icon-not-visible',
+      rejectIcon: 'icon-not-visible',
+      accept: () => {
+        this.http.post<any>(`${environment.baseUrlAPI}/users/admin/${user.id}/send-reset`, {}).subscribe({
+          next: () => this.showMessage('success', 'Success', `Reset email sent to ${user.email}.`),
+          error: (err) => this.showMessage('error', 'Error', err?.error?.message || 'Could not send the reset email.'),
+        });
+      },
+      reject: () => { },
+    });
   }
 
-  deleteLoginProfile(id: string) {
-    //@ts-ignore // not check type
-    this.loginProfileControllerServiceProxy.remove(id)
-      .subscribe((res: any) => {
-      })
+  private showMessage(severity: string, summary: string, detail: string) {
+    this.messageService.add({ severity, summary, detail, closable: true });
   }
+
   onSearch() {
     let event: any = {};
     event.rows = this.rows;

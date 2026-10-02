@@ -77,7 +77,7 @@ export class UserFormComponent implements OnInit, AfterViewInit {
     private authUser: LoginProfileControllerServiceProxy,
     private countryProxy: CountryControllerServiceProxy,
     private ref: ChangeDetectorRef,
-    private logProxy : LoginProfileControllerServiceProxy,
+    private logProxy: LoginProfileControllerServiceProxy,
     protected dialogService: DialogService,
   ) { }
   ngAfterViewInit(): void {
@@ -104,7 +104,7 @@ export class UserFormComponent implements OnInit, AfterViewInit {
     this.user.userType = undefined!;
     this.user.mobile = '';
     this.user.landline = '';
-    let ins =new Institution()
+    let ins = new Institution()
 
     this.UserTypeServiceProxy.getUserTypes().subscribe((res: any) => {
       this.userTypes = res;
@@ -142,29 +142,29 @@ export class UserFormComponent implements OnInit, AfterViewInit {
     });
 
     this.instProxy.getInstitutionForManageUsers(0, 0, userid)
-    .subscribe((res) => {
-      this.institutions = res.items;
+      .subscribe((res) => {
+        this.institutions = res.items;
 
-      if (ins) {
-        this.institutions.forEach((ins: Institution) => {
-          if (ins.id == this.user.institution.id) {
-            let cat = ins.category;
-            let type = ins.type;
-            ins.category = new InstitutionCategory(cat);
-            ins.type = new InstitutionType(type);
-            this.user.institution = ins;
-          }
-        });
-      }
+        if (ins) {
+          this.institutions.forEach((ins: Institution) => {
+            if (ins.id == this.user.institution.id) {
+              let cat = ins.category;
+              let type = ins.type;
+              ins.category = new InstitutionCategory(cat);
+              ins.type = new InstitutionType(type);
+              this.user.institution = ins;
+            }
+          });
+        }
 
-      if (this.userRole == 'Data Collection Team') {
-        this.institutions = this.institutions.filter((o) => o.country.id == this.countryId && o.sectorId == this.sectorId && o.type.id == 3);
-      }
+        if (this.userRole == 'Data Collection Team') {
+          this.institutions = this.institutions.filter((o) => o.country.id == this.countryId && o.sectorId == this.sectorId && o.type.id == 3);
+        }
 
 
-    });
+      });
 
-  
+
   }
 
   onChangeUser(event: any) {
@@ -221,7 +221,7 @@ export class UserFormComponent implements OnInit, AfterViewInit {
                   this.messageService.add({
                     severity: 'success',
                     summary: 'Success',
-                    detail: 'User is created successfully!',
+                    detail: `User is created successfully! An invitation email has been sent to ${this.user.email}.`,
                     closable: true,
                   });
                 },
@@ -238,6 +238,15 @@ export class UserFormComponent implements OnInit, AfterViewInit {
                   this.coreatingUser = false;
                 }
               );
+          },
+          (error) => {
+s            this.coreatingUser = false;
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: this.serverMessage(error) || 'Could not create the login for this email. It may already be registered.',
+              closable: true,
+            });
           }
         )
 
@@ -292,7 +301,7 @@ export class UserFormComponent implements OnInit, AfterViewInit {
   onDeleteClick() {
 
     if (this.user.status === 0) {
-     
+
       this.confirmationService.confirm({
         message: 'Are you sure you want to deactivate the user?',
         header: 'Deactivate Confirmation',
@@ -306,7 +315,7 @@ export class UserFormComponent implements OnInit, AfterViewInit {
       });
     }
     else if (this.user.status === 1) {
-     
+
       this.confirmationService.confirm({
         message: 'Are you sure you want to activate the user?',
         header: 'Activate Confirmation',
@@ -334,8 +343,8 @@ export class UserFormComponent implements OnInit, AfterViewInit {
         });
       });
 
-       this.authUser.updateStatus(this.user.loginProfile).subscribe(async ( res) => {
-      });
+    this.authUser.updateStatus(this.user.loginProfile).subscribe(async (res) => {
+    });
   }
 
 
@@ -386,11 +395,11 @@ export class UserFormComponent implements OnInit, AfterViewInit {
     this.selectedUserTypesFordrop = ty;
 
   }
-  watchVideo(){
+  watchVideo() {
     let ref = this.dialogService.open(GuidanceVideoComponent, {
       header: 'Guidance Video',
       width: '60%',
-      contentStyle: {"overflow": "auto"},
+      contentStyle: { "overflow": "auto" },
       baseZIndex: 10000,
       data: {
         sourceName: 'User',
@@ -398,9 +407,16 @@ export class UserFormComponent implements OnInit, AfterViewInit {
     });
 
     ref.onClose.subscribe(() => {
-      
+
     })
   }
 
-}
 
+  private serverMessage(error: any): string | undefined {
+    try {
+      return JSON.parse(error?.response)?.message;
+    } catch {
+      return undefined;
+    }
+  }
+}

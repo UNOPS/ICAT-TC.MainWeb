@@ -1,10 +1,11 @@
-import { Component, OnInit ,ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, UntypedFormGroup, NgForm, Validators } from '@angular/forms';
 import decode from 'jwt-decode';
 import { AuthControllerServiceProxy, AuthCredentialDto } from 'shared/service-proxies/auth-service-proxies';
 import { GuidanceVideoComponent } from 'app/guidance-video/guidance-video.component';
 import { DialogService } from 'primeng/dynamicdialog';
+import { MessageService } from 'primeng/api';
 
 @Component({
   selector: 'app-set-password',
@@ -29,33 +30,41 @@ export class SetPasswordComponent implements OnInit {
   showEmail: boolean = false;
   public isSubmitted: boolean = false;
   fSetPassword: any;
-  
+
 
   constructor(
     private router: Router,
     private authControllerServiceProxy: AuthControllerServiceProxy,
     private route: ActivatedRoute,
     protected dialogService: DialogService,
-  ) { 
+    private messageService: MessageService,
+  ) {
     let regEx = new RegExp("^(?=.*[a-z])(?=.*[A-Z])((?=.*[0-9])|(?=.*[!@#$%^&*]))(?=.{6,})");
 
   }
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
-      const token = localStorage.getItem('ACCESS_TOKEN')!;
-      const tokenPayload = decode<any>(token);
-      this.email = tokenPayload.username;
-      if (this.email) {
-        this.showEmail = true
+      if (params['email']) {
+        this.email = params['email'];
+        this.showEmail = false;
+        return;
       }
+      try {
+        const tokenPayload = decode<any>(localStorage.getItem('ACCESS_TOKEN')!);
+        this.email = tokenPayload.username;
+      } catch {
+        this.email = '';
+      }
+      this.showEmail = !!this.email;
     });
   }
-  watchVideo(){
+
+  watchVideo() {
     let ref = this.dialogService.open(GuidanceVideoComponent, {
       header: 'Guidance Video',
       width: '60%',
-      contentStyle: {"overflow": "auto"},
+      contentStyle: { "overflow": "auto" },
       baseZIndex: 10000,
       data: {
         sourceName: 'Reports',
@@ -63,26 +72,23 @@ export class SetPasswordComponent implements OnInit {
     });
 
     ref.onClose.subscribe(() => {
-      
+
     })
   }
 
   clickResetPassword() {
     if (this.form.valid && this.passwordConfirm == this.resetPasswordDto.password) {
-      this.resetPasswordDto.username = this.email;
-      this.authControllerServiceProxy.resetOWnPassword(this.resetPasswordDto).subscribe(isSuccess => {
-        if (isSuccess) {
-          this.islSuccessPopup = true;
+      this.resetPasswordDto.username = this.email.trim();
+      this.authControllerServiceProxy.resetOWnPassword(this.resetPasswordDto).subscribe(res => {
+        if (res?.status) {
+          this.messageService.add({ severity: 'success', summary: 'Success', detail: 'Your password has been set. Please log in.', closable: true });
           this.gotoLogin();
         } else {
-          this.isErrorPopup = true;
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'The email or code is not correct. Please check the latest email you received.', closable: true });
         }
-
-       
       },
         err => {
-          this.isErrorPopup = true;
-
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Could not set the password. Please try again later.', closable: true });
         });
     }
   }

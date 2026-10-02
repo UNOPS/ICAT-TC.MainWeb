@@ -83,6 +83,7 @@
             </div>
           </th>
           <th></th>
+          <th *ngIf="isMasterAdmin"></th>
           <th>Type</th>
           <th>First name</th>
           <th>Institution</th>
@@ -113,6 +114,29 @@
             (click)="EditUser(customer)"
           ></button>
           </td>
+          <td *ngIf="isMasterAdmin" style="white-space: nowrap">
+            <button
+              type="button"
+              class="p-button-rounded p-button-text"
+              pButton
+              pRipple
+              icon="pi pi-envelope"
+              pTooltip="Send password reset / invite"
+              tooltipPosition="top"
+              (click)="onSendResetClick(customer)"
+            ></button>
+            <button
+              *ngIf="customer.username !== myUserName"
+              type="button"
+              class="p-button-rounded p-button-text p-button-danger"
+              pButton
+              pRipple
+              icon="pi pi-trash"
+              pTooltip="Delete user everywhere"
+              tooltipPosition="top"
+              (click)="onDeleteClick(customer)"
+            ></button>
+          </td>
           <td>{{ customer.userType?.name }}</td>
           <td>{{ customer.firstName }}</td>
 
@@ -138,3 +162,4 @@
     </p-table>
   </div>
 </div>
+<p-confirmDialog [style]="{ width: '50vw' }" [baseZIndex]="10000" rejectButtonStyleClass="p-button-text"></p-confirmDialog>
