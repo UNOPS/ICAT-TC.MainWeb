@@ -306,6 +306,7 @@ logOutSubs: Subscription;
               req.scale = this.cm_detail.scale;
               req.boundraries = this.cm_detail.boundraries;
               req.intCMApproach = this.cm_detail.intCMApproach;
+              req.otherIntCMApproach = this.cm_detail.otherIntCMApproach;
               req.appliedMethodology = this.cm_detail.appliedMethodology;
               delete (req as any).sectorsCovered;
               delete (req as any).geographicalAreasCovered;
@@ -349,7 +350,7 @@ logOutSubs: Subscription;
                     this.messageService.add({
                       severity: 'success',
                       summary: 'Success',
-                      detail: 'Assessment has been created successfully',
+                      detail: this.isEditMode ? 'Assessment details have been updated successfully' : 'Assessment has been created successfully',
                       closable: true,
                     })
                     if ((!this.isCompleted && this.isContinue ) || !this.isEditMode) this.isSavedAssessment = true
@@ -393,6 +394,42 @@ logOutSubs: Subscription;
         severity: 'error',
         summary: 'Error',
         detail: 'Fill all mandatory fields',
+        closable: true,
+      })
+    }
+  }
+
+  /**
+   * Awaited by <app-cm-section> right before it saves answers.
+   * The section's Update buttons post the answers and the assessment row only; the fields of the
+   * header that live in the separate assessment_cm_detail table (assessment boundaries, carbon
+   * market approach, scale, baseline methodology) used to be saved only by the header's own
+   * Update button, so edits made before pressing a section Update were silently lost.
+   */
+  saveDetailsFromSection = async (): Promise<void> => {
+    const headerEditable = this.isEditMode && !this.isSavedAssessment
+    if (!headerEditable || !this.cm_detail?.id || !this.assessment?.id) return
+
+    let assessment = new Assessment()
+    assessment.id = this.assessment.id
+    assessment.init()
+
+    let req = new AssessmentCMDetail()
+    req.id = this.cm_detail.id
+    req.cmassessment = assessment
+    req.scale = this.cm_detail.scale
+    req.boundraries = this.cm_detail.boundraries
+    req.intCMApproach = this.cm_detail.intCMApproach
+    req.otherIntCMApproach = this.cm_detail.otherIntCMApproach
+    req.appliedMethodology = this.cm_detail.appliedMethodology
+
+    try {
+      await this.serviceProxy.createOneBaseAssessmentCMDetailControllerAssessmentCMDetail(req).toPromise()
+    } catch (error) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Assessment boundaries / methodology could not be saved. Please use the Update button in the assessment details section.',
         closable: true,
       })
     }

@@ -18,8 +18,9 @@ export class CmSectionComponent implements OnInit {
   @Input() isEditMode: boolean;
   @Input() isCompleted: boolean;
   @Input() expectedGhgMitigation: number;
+  @Input() beforeSave?: () => Promise<void>;
   @ViewChild('cmSectionThreeComponent') cmSectionThreeComponent: CmSectionThreeComponent
- 
+
   openAccordion = 0
 
   sections: any[] = []
@@ -61,7 +62,7 @@ export class CmSectionComponent implements OnInit {
     'be demonstrated through the application of different additionality tests including a regulatory additionality test (going beyond existing laws and regulations), an investment ' +
     'test and/or a barrier test. For the quantification of mitigation outcomes, it is essential that crediting baselines are set credibly and conservatively and that a robust ' +
     'monitoring concept is in place. The following questions are therefore focusing on the intervention’s approach to additionality determination, baseline setting and monitoring.'
-  criteria2_description = 'GHG emissions lock-in refers to the investment in technologies or practices that prevent transitioning to lower-emission technologies or practices in the ' + 
+  criteria2_description = 'GHG emissions lock-in refers to the investment in technologies or practices that prevent transitioning to lower-emission technologies or practices in the ' +
     'short term, inhibiting a transformation to low-carbon societies.'
   readyToNavigate: boolean = false
 
@@ -86,7 +87,7 @@ export class CmSectionComponent implements OnInit {
     this.shownCriterias[0].push(true)
     this.shownSections.push(true)
     if (this.assessment.processDraftLocation || this.assessment.outcomeDraftLocation) {
-      this.openAccordion=1;
+      this.openAccordion = 1;
       this.shownSections.push(true)
     }
     if (this.isEditMode) this.isFirstLoading = true
@@ -122,7 +123,7 @@ export class CmSectionComponent implements OnInit {
   async getSections() {
     let res = await this.cMQuestionControllerServiceProxy.getAllSection().toPromise();
     this.sections = res.sort((a, b) => a.order - b.order);
-    
+
   }
 
   async getCriteriaBySection(sectionId: number) {
@@ -144,9 +145,9 @@ export class CmSectionComponent implements OnInit {
     await this.getCriteriaBySection(section.id);
   }
 
-  onAnswer2(e:any, message: string, question: any, criteria: any, section: any) {
+  onAnswer2(e: any, message: string, question: any, criteria: any, section: any) {
     this.showConditionDialog = false
-    if (!this.loadedQuestions.includes(question.id)){
+    if (!this.loadedQuestions.includes(question.id)) {
       criteria.currentQuestion++
       this.loadedQuestions.push(question.id)
     }
@@ -154,7 +155,7 @@ export class CmSectionComponent implements OnInit {
       this.currentCriteria++
       this.loadedCriterias.push(criteria.id)
     }
-    
+
     let sectionDto = this.sectionResult.sections?.find(s => s.section.id === section.id)
     if (!sectionDto) {
       sectionDto = new SectionDto()
@@ -166,7 +167,7 @@ export class CmSectionComponent implements OnInit {
       sectionDto.criteria.push(_criteriaDto)
       this.sectionResult.sections = []
       this.sectionResult.sections.push(sectionDto)
-    } 
+    }
 
     let c = sectionDto.criteria.find(cr => cr.criteria.id === criteria.id)
     let questionDto = new QuestionDto()
@@ -198,7 +199,7 @@ export class CmSectionComponent implements OnInit {
           this.message = 'You are allowed to continue with the assessment, but we are strongly encouraged to evaluate all preconditions to ensure that they are met to enable transformational change.'
           if (!e.isLoading) {
             this.visible = true;
-          } 
+          }
         }
         if (!e.answer.isPassing) {
           if (!this.isFirstLoading) {
@@ -230,7 +231,7 @@ export class CmSectionComponent implements OnInit {
                 q.institution = questionDto.institution;
                 q.question = questionDto.question;
                 q.type = questionDto.type;
-              } 
+              }
               return q
             })
             if (!cr.questions.find(_q => _q.question?.id === question.id)) {
@@ -249,16 +250,16 @@ export class CmSectionComponent implements OnInit {
       return sec
     })
 
-    if ((this.criterias[0].length === this.currentCriteria) ) {
+    if ((this.criterias[0].length === this.currentCriteria)) {
       this.isPassed = true
       let notMetCriterias: any[] = []
       this.sectionResult.sections.forEach(sec => {
         sec.criteria.forEach(cr => {
           cr.questions.forEach(q => {
-            if (this.isPassed) {this.isPassed = q.answer.isPassing}
+            if (this.isPassed) { this.isPassed = q.answer.isPassing }
             if (!q.answer.isPassing) {
               notMetCriterias.push(cr.criteria.name)
-            } 
+            }
           })
         })
       })
@@ -280,7 +281,7 @@ export class CmSectionComponent implements OnInit {
         this.visible_condition = true
         this.condition_message = 'Following criterias are not met.<ul>'
         notMetCriterias.forEach(c => {
-          this.condition_message = this.condition_message + '<li>'+c+'</li>'
+          this.condition_message = this.condition_message + '<li>' + c + '</li>'
         })
         this.condition_message = this.condition_message + '</ul>'
       }
@@ -295,7 +296,7 @@ export class CmSectionComponent implements OnInit {
   onAnswer(e: any, message: string, criteria: any, sectionIdx: number, criteriaIdx: number, idx: number) {
     this.prev_answer = e.answer
     let question = criteria.questions[idx]
-    if (!this.loadedQuestions.includes(question.id)){
+    if (!this.loadedQuestions.includes(question.id)) {
       this.currentQuestion++
       this.loadedQuestions.push(question.id)
     }
@@ -354,7 +355,7 @@ export class CmSectionComponent implements OnInit {
               this.message = 'You are allowed to continue with the assessment, but we are strongly encouraged to evaluate all preconditions to ensure that they are met to enable transformational change.'
               if (!e.isLoading) {
                 this.visible = true;
-              } 
+              }
             }
             if (this.criterias[sectionIdx]?.length === this.shownCriterias[sectionIdx].length) {
               this.shownSections.push(true)
@@ -405,7 +406,7 @@ export class CmSectionComponent implements OnInit {
               this.message = 'You are allowed to continue with the assessment, but we are strongly encouraged to evaluate all preconditions to ensure that they are met to enable transformational change.'
               if (!e.isLoading) {
                 this.visible = true;
-              } 
+              }
             }
             if (this.preQuestionIdx !== idx) this.shownQuestions[sectionIdx][criteriaIdx].push(true)
             this.preQuestionIdx = idx;
@@ -437,10 +438,10 @@ export class CmSectionComponent implements OnInit {
   }
 
 
-  save(event: SaveDto) {
-     if(event.type){
+  async save(event: SaveDto) {
+    if (event.type) {
       this.shownSections.push(true);
-     }
+    }
     let result: SaveCMResultDto = new SaveCMResultDto()
     result.result = []
     result.result = [...event?.result]
@@ -456,14 +457,14 @@ export class CmSectionComponent implements OnInit {
           item.question = q.question;
           item.type = q.type;
           item.filePath = q.file;
-          if (this.isEditMode){
+          if (this.isEditMode) {
             let assQ = this.assessmentQuestions.find(o => (o.question.id === q.question?.id))
             if (assQ) {
               item.assessmentQuestionId = assQ.id;
               if (assQ.assessmentAnswers.length > 0) {
                 item.assessmentAnswerId = assQ.assessmentAnswers[0]?.id;
               }
-            } 
+            }
           }
           if (item.question) result.result.push(item)
         })
@@ -471,9 +472,14 @@ export class CmSectionComponent implements OnInit {
     })
     result.assessment = this.assessment;
     result.isDraft = event.isDraft;
-    result.type =event.type;
-    result.name=event.name;
+    result.type = event.type;
+    result.name = event.name;
     result.expectedGHGMitigation = event.expected_ghg_mitigation
+    if (this.beforeSave) {
+      try {
+        await this.beforeSave()
+      } catch (e) { }
+    }
     this.cMAssessmentQuestionControllerServiceProxy.saveResult(result)
       .subscribe(res => {
         if (res) {
@@ -495,11 +501,11 @@ export class CmSectionComponent implements OnInit {
             this.isEditMode = true
             this.setInitialState()
             this.router.navigate(['../carbon-market-tool-edit'], { queryParams: { id: this.assessment.id, isEdit: true, isContinue: true }, relativeTo: this.activatedRoute });
-          
+
           }
           if (result.assessment.assessment_approach === 'DIRECT' && !event.isDraft && !this.isCompleted) {
             this.router.navigate(['../carbon-market-tool-result'], { queryParams: { id: this.assessment.id }, relativeTo: this.activatedRoute });
-          } 
+          }
 
         }
       }, error => {
@@ -513,7 +519,7 @@ export class CmSectionComponent implements OnInit {
         if (event.isLogoutClicked) {
           this.appService.autoSavingDone.next(true);
           this.appService.loginOut.next(false)
-          if  (event.logoutSub) {
+          if (event.logoutSub) {
             event.logoutSub.unsubscribe();
             //@ts-ignore
             event.logoutSub = undefined;
@@ -576,7 +582,7 @@ export class CmSectionComponent implements OnInit {
     }
   }
 
-  okayCondition(){
+  okayCondition() {
     this.visible_condition = false
   }
 
@@ -593,14 +599,14 @@ export class CmSectionComponent implements OnInit {
 export class SaveDto {
   result: CMResultDto[] = []
   isDraft: boolean = false
-  name:string = ''
-  type:string = ''
+  name: string = ''
+  type: string = ''
   expected_ghg_mitigation: number = 0
   isLogoutClicked: boolean = false
-  logoutSub?: Subscription 
+  logoutSub?: Subscription
 }
 
-export class SectionResultDto{
+export class SectionResultDto {
   sections: SectionDto[]
 }
 
