@@ -112,7 +112,10 @@ export class HeatMapComponent implements OnChanges {
 
     for (const x of this.xData) {
       for (const y of this.yData) {
+        // Math.floor(null) === 0: skip unscored items or they land in the 0/0 cell.
         const matches = (this.score || []).filter((item) =>
+          item.processScore != null &&
+          item.outcomeScore != null &&
           scoresMatchMatrixCell(item.processScore, item.outcomeScore, y.value, x.value),
         );
         if (matches.length === 0) {
